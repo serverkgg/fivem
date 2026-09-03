@@ -1,0 +1,193 @@
+# yaml-language-server: $schema=./serverk.schema.json
+schemaVersion: serverk.gg/v1
+kind: GamePackage
+
+metadata:
+  id: fivem
+  name:
+    ar: فايف إم
+    en: FiveM
+  description:
+    ar: سيرفر فايف إم — مدينة رول بلاي على GTA V مع أصحابك. قاعدة بيانات MariaDB جاهزة داخل السيرفر عشان تركّب ESX أو QBCore على طول.
+    en: FiveM dedicated servers — GTA V roleplay with your friends. A MariaDB database ships inside the server, ready for ESX or QBCore.
+  tagline:
+    ar: مدينتك في GTA V — سيرفرك جاهز خلال دقيقة
+    en: Your own GTA V city — your server, ready in a minute
+  category: roleplay
+  logo: assets/logo.webp
+  banner: assets/banner.webp
+
+resources:
+  minMemoryMb: 4096
+  recommendedMemoryMb: 8192
+  minDiskMb: 20480
+  playersPerMemoryGb: 8
+  maxRecommendedPlayers: 48
+
+container:
+  image: serverkgg/fivem
+  ports:
+    - key: game
+      containerPort: 30120
+      protocol: tcp
+      name:
+        ar: فايف إم
+        en: FiveM
+      hint:
+        ar: افتح فايف إم واضغط F8 واكتب connect وبعدها العنوان زي ما هو.
+        en: Open FiveM, press F8, and type connect followed by the address exactly as shown.
+      hostRange:
+        default: 30120
+        min: 30120
+        max: 30219
+    - key: game-udp
+      containerPort: 30120
+      protocol: udp
+      name:
+        ar: اللعب (UDP)
+        en: Gameplay (UDP)
+      hint:
+        ar: نفس المنفذ اللي فوق، بس على UDP. اللعبة تستخدمه للحركة والصوت، ما تحتاج تنسخه.
+        en: The same port as above, over UDP. The game uses it for movement and voice — nothing to copy.
+      hostRange:
+        default: 30120
+        min: 30120
+        max: 30219
+
+backup:
+  only:
+    - server-data/**
+    - .serverk-database.sql
+    - .serverk-install.json
+  except:
+    - server-data/cache/**
+    - server-data/logs/**
+    - server-data/.fxserver-*/**
+    - server-data/**/.git/**
+
+reset:
+  keep:
+    - alpine
+    - run.sh
+    - .serverk-install.json
+
+presence:
+  name: player
+  id: id
+  fields:
+    - key: ping
+      label:
+        ar: البنق
+        en: Ping
+    - key: identifier
+      label:
+        ar: المعرّف
+        en: Identifier
+
+files:
+  protected:
+    - alpine
+    - run.sh
+    - .mariadb
+    - .serverk-install.json
+    - .serverk-database.sql
+  notable:
+    - match: server-data/server.cfg
+      label:
+        ar: إعدادات
+        en: Settings
+      icon: settings
+      color: "#5ba32b"
+      restart: true
+      note:
+        ar: إعدادات السيرفر كاملة. سطور المنافذ ومفتاح الترخيص ورابط قاعدة البيانات نكتبها إحنا كل تشغيل، والباقي لك. أي تعديل يبي إعادة تشغيل.
+        en: Every server setting. We rewrite the endpoint, licence key and database lines on each boot; the rest is yours. Any change needs a restart.
+    - match: server-data/resources
+      label:
+        ar: الريسورسات
+        en: Resources
+      icon: puzzle
+      color: "#c77dff"
+      restart: true
+      note:
+        ar: مجلد الريسورسات. حط الفريمورك والسكربتات هنا وضيف سطر ensure في server.cfg عشان تشتغل.
+        en: Your resources folder. Drop your framework and scripts here and add an ensure line in server.cfg to load them.
+    - match: server-data/resources/[serverk]
+      label:
+        ar: ريسورس اللوحة
+        en: Panel resource
+      icon: shield
+      color: "#e0a458"
+      note:
+        ar: ريسورس صغير من سيرفرك يخلّي زر الطرد في اللوحة يشتغل. نعيد كتابته كل تركيب، لا تعدّله.
+        en: A small Serverk resource that makes the panel's kick button work. We rewrite it on every install — do not edit it.
+    - match: server-data/cache
+      label:
+        ar: الكاش
+        en: Cache
+      icon: box
+      color: "#8d99ae"
+      note:
+        ar: ملفات مؤقتة ينزّلها اللاعبين. تقدر تحذفه وقت ما تبي، السيرفر يبنيه من جديد.
+        en: Temporary files players download. Delete it whenever you like — the server rebuilds it.
+
+guideTags:
+  - id: start
+    name:
+      ar: ابدأ من هنا
+      en: Start here
+  - id: features
+    name:
+      ar: مميزات
+      en: Features
+  - id: legal
+    name:
+      ar: قانوني
+      en: Legal
+
+guides:
+  - id: getting-started
+    title:
+      ar: البدء بسيرفرك
+      en: Getting started
+    summary:
+      ar: من مفتاح الترخيص حتى دخول أول لاعب مدينتك.
+      en: From the licence key to the first player joining your city.
+    tags:
+      - start
+    surfaces:
+      - overview
+      - console
+    bodyPath:
+      ar: guides/getting-started/ar.md
+      en: guides/getting-started/en.md
+  - id: frameworks
+    title:
+      ar: ESX و QBCore — ركّب فريمورك الرول بلاي
+      en: ESX and QBCore — installing a roleplay framework
+    summary:
+      ar: ركّب الفريمورك على قاعدة البيانات اللي جاية مع سيرفرك، خطوة خطوة.
+      en: Install a framework against the database that ships inside your server, step by step.
+    tags:
+      - features
+    surfaces:
+      - overview
+      - panel
+      - files
+    bodyPath:
+      ar: guides/frameworks/ar.md
+      en: guides/frameworks/en.md
+  - id: disclaimer
+    title:
+      ar: تنويه Rockstar وشروط التشغيل
+      en: Rockstar notice and operating terms
+    summary:
+      ar: وش يلزمك تنشره كمشغّل سيرفر فايف إم، وليش.
+      en: What you must publish as a FiveM server operator, and why.
+    tags:
+      - legal
+    surfaces:
+      - overview
+    bodyPath:
+      ar: guides/disclaimer/ar.md
+      en: guides/disclaimer/en.md

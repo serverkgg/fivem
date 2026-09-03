@@ -1,0 +1,90 @@
+## Why you need a framework
+
+A clean FiveM server lets you spawn in and walk around, and that is all. Jobs, money, vehicles and identity all come from a roleplay framework. The two big ones are **ESX** and **QBCore**, and both run on a MySQL database.
+
+That database is already running inside your server. Nothing to buy, nothing to install elsewhere.
+
+@[open](panel:database)
+
+## Your database details
+
+Open the **Database** tab and you will find:
+
+- Host: `127.0.0.1`
+- Port: `3306`
+- Database: `fivem`
+- User: `fivem`
+- Password: generated for you, copy it from the tab
+- A ready-made connection string for oxmysql
+
+We also write that connection string into `server.cfg` on the `set mysql_connection_string` line, so scripts find it on their own.
+
+> [!note]
+> The database only listens on `127.0.0.1` inside your server. You cannot reach it from your own computer, and that is deliberate — it keeps your players' data off the internet.
+
+## Before you start
+
+Every framework needs something to talk to the database. The standard today is **oxmysql**:
+
+1. Download the latest [oxmysql](https://github.com/overextended/oxmysql/releases) release.
+2. Unzip it into `server-data/resources`.
+3. Add this to `server.cfg`, above the framework:
+
+```cfg
+ensure oxmysql
+```
+
+@[open](files:server-data/server.cfg)
+
+## ESX
+
+1. Download `es_extended` from the [ESX repository](https://github.com/esx-framework/esx_core) and put it in `server-data/resources/[core]`.
+2. The SQL files shipped with ESX have to be loaded into the database. Upload them into `server-data` and run them from the console, or from a MySQL tool that connects from inside the server.
+3. Add the lines to `server.cfg`:
+
+```cfg
+ensure oxmysql
+ensure es_extended
+```
+
+4. Make sure OneSync is on in the Settings tab — ESX will not run without it.
+
+@[open](panel:settings)
+
+## QBCore
+
+1. Download `qb-core` and the rest of the [QBCore](https://github.com/qbcore-framework) resources into `server-data/resources/[qb]`.
+2. Load `qbcore.sql` into the database the same way as ESX.
+3. Add to `server.cfg`:
+
+```cfg
+ensure oxmysql
+ensure qb-core
+```
+
+4. OneSync must be on here as well.
+
+## After any install
+
+Once you add a resource, tell the server to rescan the folder:
+
+@[command](refresh)
+
+then:
+
+@[command](restart oxmysql)
+
+Or restart the whole server from the panel — easier and more reliable the first time.
+
+## Backups
+
+Every backup we take carries a **full dump of your database**. Restoring a backup brings your files straight back, and the database is one button away in the Database tab.
+
+> [!warning]
+> Restoring the database wipes everything written since that backup. Your players lose the money and vehicles they earned after it.
+
+## Common problems
+
+- **`Couldn't find resource`**: the folder name does not match the line in `server.cfg`. Names are case sensitive.
+- **A script says it cannot reach the database**: check that `ensure oxmysql` sits above the framework in `server.cfg`, and that the connection string line is there.
+- **Players cannot join**: usually OneSync is off, or the SQL files were never loaded.
