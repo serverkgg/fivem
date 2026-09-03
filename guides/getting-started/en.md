@@ -18,6 +18,9 @@ Then open the **Setup** tab in the panel, paste the key into **Licence key**, an
 > [!note]
 > Saving the key reinstalls the server. Your files and your database stay where they are, but it takes a minute.
 
+> [!warning]
+> If your very first install stops and says it needs a licence key, open a support ticket — we finish the setup for you once you hand us the key.
+
 ## Start the server
 
 Once the key is saved, press start and watch the console. This line means the key was accepted and the server is up:
