@@ -40,7 +40,10 @@ The driver is built on [`@serverkgg/bridge`](https://www.npmjs.com/package/@serv
 
 ## Art
 
-`assets/logo.webp` and `assets/banner.webp` are **placeholders carried over from the Palworld package**. The official FiveM app icon is not published at a usable size on any Cfx.re host — `fivem.net/favicon.png` is a 32x32 ICO — and the game-art skill forbids drawing or upscaling one. Replace both before any production release.
+Both assets are official Cfx.re art, sourced and never drawn.
+
+- `assets/logo.webp` (256x256) is the FiveM client icon, extracted from the public installer `https://content.cfx.re/mirrors/client_download/FiveM.exe`. It is the executable's default icon — `RT_GROUP_ICON` id `1`, its largest entry `RT_ICON` id `6`, a 256x256 32bpp embedded PNG — re-encoded to WebP without resampling.
+- `assets/banner.webp` (1280x400) is a crop of the fivem.net hero background `https://fivem.net/73663161434ea35812a20da2e517f102.jpg` (3840x2160), taken from the `index` stylesheet. Cfx ships it pre-dimmed for use behind page chrome, so the crop is tone-normalised to survive the panel's own scrim.
 
 ## Arabic copy
 
