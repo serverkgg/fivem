@@ -4,9 +4,9 @@ import {
 	connectionString,
 	generateDatabasePassword,
 	generatePlayersToken,
-	isLicenseKey,
-	LICENSE_VARIABLE,
+	licenseKeyOf,
 	ownedDirectives,
+	requireLicenseKey,
 } from "../shared";
 import { installArtifact, isArtifactInstalled, resolveRequestedArtifact } from "./installArtifact";
 import { installDatabase, writeDatabaseCredentials } from "./installDatabase";
@@ -48,11 +48,7 @@ export const install: Bridge.Install = {
 
 		await writeDatabaseCredentials(context, databasePassword);
 
-		const licenseKey = context.variable(LICENSE_VARIABLE);
-
-		if (licenseKey === null || !isLicenseKey(licenseKey)) {
-			context.log.warn("no licence key yet — fxserver will refuse to start until one is set in the panel");
-		}
+		const licenseKey = licenseKeyOf(context);
 
 		await applyDirectives(
 			context,
@@ -74,6 +70,10 @@ export const install: Bridge.Install = {
 		context.log("install complete", {
 			build: artifact.build,
 		});
+
+		// Everything above is persisted first, so the retry that follows a pasted
+		// key is a no-op reconcile rather than a second download.
+		requireLicenseKey(context);
 	},
 	async describe(context) {
 		const stamp = await readStamp(context);

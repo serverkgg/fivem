@@ -1,3 +1,4 @@
+import { type Bridge, BridgeUserError } from "@serverkgg/bridge";
 import { PANEL_RESOURCE } from "./fivemPaths";
 import type { ConfigDirective } from "./serverConfig";
 
@@ -7,6 +8,29 @@ const LICENSE_KEY = /^[A-Za-z0-9_.:-]{8,128}$/;
 
 export const isLicenseKey = (value: string) => {
 	return LICENSE_KEY.test(value.trim());
+};
+
+export const licenseKeyOf = (context: Bridge.Context) => {
+	const value = context.variable(LICENSE_VARIABLE) ?? "";
+
+	return isLicenseKey(value) ? value.trim() : null;
+};
+
+// FXServer exits within a second when sv_licenseKey is unset, so without this
+// the supervisor reads five crash-restarts and trips its breaker. The bridge
+// has no hold that can ask for a value rather than a file, so the honest stop
+// is an error carrying the one sentence the owner can act on.
+export const requireLicenseKey = (context: Bridge.Context) => {
+	const licenseKey = licenseKeyOf(context);
+
+	if (licenseKey === null) {
+		throw new BridgeUserError({
+			ar: "سيرفرك يبي مفتاح ترخيص من Cfx.re عشان يشتغل. سوّ مفتاح من portal.cfx.re/servers/registration-keys والصقه في تبويب التجهيز.",
+			en: "your server needs a Cfx.re licence key to run — create one at portal.cfx.re/servers/registration-keys and paste it into the Setup tab",
+		});
+	}
+
+	return licenseKey;
 };
 
 export interface OwnedConfig {
