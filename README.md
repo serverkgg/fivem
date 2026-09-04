@@ -18,7 +18,7 @@ The FiveM game package for the Serverk platform (`serverk.gg`). This repo holds 
 FXServer boots **txAdmin** rather than the game directly: `code/server/launcher/src/Server.cpp` picks `citizen:server:monitor` whenever the command line carries no `+exec`, and txAdmin then spawns the game itself. Serverk drives it the way txAdmin documents for hosting providers, through the `TXHOST_*` environment (`docs/env-config.md` in `citizenfx/txAdmin`):
 
 - `TXHOST_DATA_PATH` is `txData` inside the volume, `TXHOST_TXA_PORT` and `TXHOST_FXS_PORT` come from the manifest ports, and `TXHOST_INTERFACE` is `0.0.0.0`.
-- `TXHOST_DEFAULT_ACCOUNT` seeds `admins.json` with a `serverk` master account whose bcrypt hash the driver computes with `Bun.password`; the plaintext is shown in the panel's Setup tab.
+- `TXHOST_DEFAULT_ACCOUNT` seeds `admins.json` with a `serverk` master account whose bcrypt hash the driver computes with `Bun.password`; the plaintext is shown in the panel's Licence tab.
 - `TXHOST_DEFAULT_CFXKEY` and `TXHOST_DEFAULT_DB*` pre-fill txAdmin's own deployer, so a framework recipe arrives with the licence key and the bundled MariaDB already filled in.
 - `TXHOST_QUIET_MODE` stays off, because the Serverk console is the live console.
 

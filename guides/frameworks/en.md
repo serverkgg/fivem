@@ -10,13 +10,13 @@ That database is already running inside your server. Nothing to buy, nothing to 
 
 Every one of those frameworks documents txAdmin as its install path — ESX calls it "the recommended method", and QBCore and Qbox both ship a template in the same place. A recipe downloads the framework, drops the resources in, runs its SQL against your database and writes `server.cfg`, all in one click.
 
-1. In the **Setup** tab of the Serverk panel, press **Open the setup page** on the txAdmin card.
+1. In the **Licence** tab of the Serverk panel, press **Open the setup page** on the txAdmin card.
 2. Start the server, open the txAdmin address in your browser, and sign in as `serverk`.
 3. Choose **Popular Recipe**, then the framework you want.
 4. Your database details and your licence key arrive pre-filled from us. Check them and press deploy.
 5. When the recipe finishes, come back to the Serverk panel and start the server.
 
-@[open](panel:setup)
+@[open](panel:license)
 
 > [!warning]
 > "Open the setup page" sends txAdmin back to its setup page, which means the server will not start again until you finish the deploy in the browser. Your files and your database are not touched.

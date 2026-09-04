@@ -6,13 +6,19 @@ import {
 	BridgeIcon,
 	BridgeLayout,
 } from "@serverkgg/bridge";
-import { ANNOUNCE_MESSAGE_LENGTH, ARTIFACT_VARIABLE, LICENSE_VARIABLE, MAX_SLOT_LIMIT } from "../shared";
+import {
+	ANNOUNCE_MESSAGE_LENGTH,
+	ARTIFACT_VARIABLE,
+	LICENSE_KEY_PATTERN,
+	LICENSE_VARIABLE,
+	MAX_SLOT_LIMIT,
+} from "../shared";
 
-const setupTab: Bridge.Tab = {
-	id: "setup",
+const licenseTab: Bridge.Tab = {
+	id: "license",
 	title: {
-		ar: "التجهيز",
-		en: "Setup",
+		ar: "الترخيص",
+		en: "Licence",
 	},
 	icon: BridgeIcon.Rocket,
 	sections: [
@@ -33,17 +39,22 @@ const setupTab: Bridge.Tab = {
 			fields: [
 				{
 					key: LICENSE_VARIABLE,
-					control: BridgeControl.Text,
+					control: BridgeControl.Secret,
 					label: {
 						ar: "مفتاح الترخيص (Licence key)",
 						en: "Licence key",
 					},
 					help: {
-						ar: "سوّ حساب في portal.cfx.re، أنشئ مفتاح جديد باسم تختاره، والصقه هنا. المفتاح 33 حرف ويبدأ بـ cfxk_. بدونه فايف إم ما يشتغل.",
-						en: "Create an account on portal.cfx.re, generate a key under any display name, and paste it here. The key is 33 characters and starts with cfxk_. FiveM will not run without one.",
+						ar: "سوّ حساب في portal.cfx.re، أنشئ مفتاح جديد باسم تختاره، والصقه هنا. المفتاح يبدأ بـ cfxk_ وبعده مقطعين بينهم _ ، أو يكون مفتاح قديم من 32 حرف. بدونه فايف إم ما يشتغل.",
+						en: "Create an account on portal.cfx.re, generate a key under any display name, and paste it here. A key starts with cfxk_ followed by two underscore-separated parts, or is an old 32-character key. FiveM will not run without one.",
 					},
 					placeholder: "cfxk_xxxxxxxxxxxxxxxxxxxxx_xxxxxx",
 					maxLength: 64,
+					pattern: LICENSE_KEY_PATTERN.source,
+					patternHint: {
+						ar: "المفتاح يبدأ بـ cfxk_ وبعده مقطعين بينهم _ ، أو مفتاح قديم من 32 حرف.",
+						en: "A key starts with cfxk_ followed by two underscore-separated parts, or is an old 32-character key.",
+					},
 				},
 				{
 					key: ARTIFACT_VARIABLE,
@@ -158,7 +169,7 @@ const settingsTab: Bridge.Tab = {
 				},
 				{
 					key: "steam_webApiKey",
-					control: BridgeControl.Text,
+					control: BridgeControl.Secret,
 					label: {
 						ar: "مفتاح Steam Web API",
 						en: "Steam Web API key",
@@ -476,7 +487,7 @@ const controlsTab: Bridge.Tab = {
 
 export const panel: Bridge.Panel = {
 	tabs: [
-		setupTab,
+		licenseTab,
 		settingsTab,
 		playersTab,
 		databaseTab,

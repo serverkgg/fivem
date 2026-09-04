@@ -9,6 +9,17 @@ export const PANEL_READY = /All ready! Please access/;
 
 export const LICENSE_REJECTED = /Could not authenticate server license key[^\n]{0,200}/;
 
+// The licensing component of FXServer is closed source. LICENSE_CHECKING was read
+// off a running dev container on 2026-09-04 — svadhesive prints
+// "Authenticating server license key..." before every attempt, and txAdmin respawns
+// FXServer every few seconds, so the pair repeats. A key that does not exist is
+// rejected by LICENSE_REJECTED, not by the pattern below; LICENSE_INVALID is still
+// a guess covering a revoked or lapsed key, which needs a real one to transcribe.
+// The setup flow degrades to its Silent phase when none of them ever prints.
+export const LICENSE_INVALID = /(invalid|expired) (server )?licen[cs]e key/i;
+
+export const LICENSE_CHECKING = /Authenticating server license key/;
+
 export const events: Bridge.Events = {
 	kind: BridgeKind.Events,
 	patterns: [

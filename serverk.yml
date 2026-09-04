@@ -60,8 +60,8 @@ container:
         ar: لوحة txAdmin
         en: txAdmin panel
       hint:
-        ar: افتح هذا العنوان في المتصفح وسجّل دخول بالمستخدم وكلمة المرور اللي في تبويب التجهيز.
-        en: Open this address in your browser and sign in with the username and password in the Setup tab.
+        ar: افتح هذا العنوان في المتصفح وسجّل دخول بالمستخدم وكلمة المرور اللي في تبويب الترخيص.
+        en: Open this address in your browser and sign in with the username and password in the Licence tab.
       hostRange:
         default: 40120
         min: 40120
@@ -187,6 +187,7 @@ guides:
     surfaces:
       - overview
       - console
+      - setup
     bodyPath:
       ar: guides/getting-started/ar.md
       en: guides/getting-started/en.md

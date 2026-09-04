@@ -37,7 +37,7 @@ These are the most common reasons servers get shut down. Stay on the right side 
 
 ## The licence key is yours
 
-The key you paste into the Setup tab comes from your own account on [portal.cfx.re](https://portal.cfx.re). That means the server is registered to you at Cfx.re, and any violation lands on you.
+The key you paste into the Licence tab comes from your own account on [portal.cfx.re](https://portal.cfx.re). That means the server is registered to you at Cfx.re, and any violation lands on you.
 
 This is deliberate: your city is yours, and you can move it anywhere else whenever you like.
 

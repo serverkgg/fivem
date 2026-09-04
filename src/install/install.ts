@@ -1,4 +1,5 @@
 import { type Bridge, BridgeKind } from "@serverkgg/bridge";
+import { startingRuntime } from "../setup";
 import {
 	applyDirectives,
 	connectionString,
@@ -102,12 +103,15 @@ export const install: Bridge.Install = {
 			build: artifact.build,
 		});
 
-		// A missing key is the owner's to fix from the Setup tab, and they can
-		// only reach it while the panel is open, so the install persists
-		// everything and says what is missing rather than failing the provision.
+		// A missing key is the owner's to fix from the setup page or the Licence
+		// tab, and they can only reach either while the panel is open, so the
+		// install persists everything and says what is missing rather than
+		// failing the provision.
 		if (licenseKey === null) {
 			context.log.warn("no cfx.re licence key yet — txadmin will run, the game server will not authenticate");
 		}
+
+		context.setup.report(startingRuntime(licenseKey !== null));
 	},
 	async describe(context) {
 		const stamp = await readStamp(context);

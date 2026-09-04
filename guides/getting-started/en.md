@@ -7,9 +7,11 @@ FiveM needs a Cfx.re licence key, and the key belongs to you rather than to us. 
 3. The portal asks for a display name and nothing else — there is no IP or address field. Give it any name that tells the keys apart, such as your server's name.
 4. Press **Generate** and copy the key. It is 33 characters long and starts with `cfxk_`.
 
-Then open the **Setup** tab in the panel, paste the key into **Licence key**, and save.
+The setup page asks for the key the first time you open your server. To change it later, it lives in the **Licence** tab.
 
-@[open](panel:setup)
+@[open](setup)
+
+@[open](panel:license)
 
 > [!note]
 > Saving the key reinstalls the server. Your files and your database stay where they are, but it takes a minute.
@@ -18,7 +20,7 @@ Then open the **Setup** tab in the panel, paste the key into **Licence key**, an
 > A Cfx.re account may hold three active registration keys. If you are at the limit, delete an old key in the portal before generating a new one.
 
 > [!warning]
-> The key is a secret. If it ever leaks — posted by mistake, or shared with someone — delete it in the portal, generate a new one, and paste the new key into the Setup tab.
+> The key is a secret. If it ever leaks — posted by mistake, or shared with someone — delete it in the portal, generate a new one, and paste the new key into the Licence tab.
 
 > [!note]
 > Your server provisions and the txAdmin panel opens before you paste the key, but the game server itself will not come up — the console retries and prints the licence error each time. Saving the key gets everything running.
@@ -39,7 +41,7 @@ If you get this instead:
 Could not authenticate server license key. The specified key does not exist.
 ```
 
-the key is wrong or was not saved. Go back to the Setup tab and check you copied the whole thing.
+the key is wrong or was not saved. Go back to the Licence tab and check you copied the whole thing.
 
 ## Join the server
 
@@ -55,12 +57,12 @@ Give your friends the same line and they are in.
 
 Your server runs under **txAdmin**, the panel Cfx.re ships for FiveM servers. The Serverk panel covers most of the work — power, console, files, settings and players — and txAdmin adds what it is best at: installing a framework in one click, banning and watching players, and scheduled restarts.
 
-The txAdmin address is on your server page under **txAdmin panel**, and the username and password are in the **Setup** tab.
+The txAdmin address is on your server page under **txAdmin panel**, and the username and password are in the **Licence** tab.
 
-@[open](panel:setup)
+@[open](panel:license)
 
 1. Open the txAdmin address in your browser.
-2. Sign in as `serverk` with the password from the Setup tab.
+2. Sign in as `serverk` with the password from the Licence tab.
 3. On the first sign-in txAdmin may ask you to change the password — change it and keep it somewhere safe.
 
 > [!note]

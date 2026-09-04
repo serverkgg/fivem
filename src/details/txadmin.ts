@@ -13,6 +13,47 @@ const REFRESH_SECONDS = 60;
 
 export const SETUP_ACTION = "setup";
 
+export const txadminStats = (password: string, port: number, dataPath: string): Bridge.DetailStat[] => {
+	return [
+		{
+			key: "username",
+			label: {
+				ar: "المستخدم",
+				en: "Username",
+			},
+			value: TXADMIN_USERNAME,
+			format: BridgeDetailFormat.Text,
+		},
+		{
+			key: "password",
+			label: {
+				ar: "كلمة المرور",
+				en: "Password",
+			},
+			value: password,
+			format: BridgeDetailFormat.Secret,
+		},
+		{
+			key: "port",
+			label: {
+				ar: "المنفذ",
+				en: "Port",
+			},
+			value: String(port),
+			format: BridgeDetailFormat.Text,
+		},
+		{
+			key: "data",
+			label: {
+				ar: "مجلد السيرفر",
+				en: "Server data",
+			},
+			value: dataPath,
+			format: BridgeDetailFormat.Text,
+		},
+	];
+};
+
 export const txadmin: Bridge.Detail = {
 	kind: BridgeKind.Detail,
 	refreshSeconds: REFRESH_SECONDS,
@@ -61,44 +102,7 @@ export const txadmin: Bridge.Detail = {
 					tone: paths.deployed ? BridgeDetailTone.Success : BridgeDetailTone.Neutral,
 				},
 			],
-			stats: [
-				{
-					key: "username",
-					label: {
-						ar: "المستخدم",
-						en: "Username",
-					},
-					value: TXADMIN_USERNAME,
-					format: BridgeDetailFormat.Text,
-				},
-				{
-					key: "password",
-					label: {
-						ar: "كلمة المرور",
-						en: "Password",
-					},
-					value: password,
-					format: BridgeDetailFormat.Text,
-				},
-				{
-					key: "port",
-					label: {
-						ar: "المنفذ",
-						en: "Port",
-					},
-					value: String(context.port(TXADMIN_PORT)),
-					format: BridgeDetailFormat.Text,
-				},
-				{
-					key: "data",
-					label: {
-						ar: "مجلد السيرفر",
-						en: "Server data",
-					},
-					value: paths.dataPath,
-					format: BridgeDetailFormat.Text,
-				},
-			],
+			stats: txadminStats(password, context.port(TXADMIN_PORT), paths.dataPath),
 			links: [
 				{
 					label: {

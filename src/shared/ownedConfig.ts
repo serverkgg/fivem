@@ -8,20 +8,18 @@ export const LICENSE_VARIABLE = "LICENSE_KEY";
 // and the 32-character key the old portal issued is still accepted. A key that
 // matches neither makes txAdmin fatal-error on TXHOST_DEFAULT_CFXKEY, so the
 // panel refuses it before the container ever sees it.
-const LICENSE_KEY_NEW = /^cfxk_\w{1,60}_\w{1,20}$/;
+export const LICENSE_KEY_PATTERN = /^(?:cfxk_\w{1,60}_\w{1,20}|\w{32})$/;
 
-const LICENSE_KEY_OLD = /^\w{32}$/;
-
+// The pattern is tested against the stored value exactly as the platform and the
+// web test it, so a value the panel accepted is a value the driver accepts.
 export const isLicenseKey = (value: string) => {
-	const key = value.trim();
-
-	return LICENSE_KEY_NEW.test(key) || LICENSE_KEY_OLD.test(key);
+	return LICENSE_KEY_PATTERN.test(value);
 };
 
 export const licenseKeyOf = (context: Bridge.Context) => {
 	const value = context.variable(LICENSE_VARIABLE) ?? "";
 
-	return isLicenseKey(value) ? value.trim() : null;
+	return isLicenseKey(value) ? value : null;
 };
 
 export const CONTROL_TOKEN_CONVAR = "serverk_controlToken";
@@ -61,7 +59,7 @@ export const ownedDirectives = (owned: OwnedConfig): ConfigDirective[] => {
 		},
 	];
 
-	const license = owned.licenseKey?.trim() ?? "";
+	const license = owned.licenseKey ?? "";
 
 	if (isLicenseKey(license)) {
 		directives.push({
