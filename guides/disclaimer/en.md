@@ -9,7 +9,7 @@ FiveM runs on top of **Grand Theft Auto V** by Rockstar Games. FiveM is made by 
 
 The agreement requires two things wherever you present your server — your site, your Discord, your server page:
 
-1. **A way to contact you.** Players and rights holders must be able to reach you: an email address or a Discord invite.
+1. **An email contact.** The agreement asks for a valid email address for you, or for whoever operates the server, written somewhere clear and obvious. A Discord invite is a good extra, but it does not replace the email.
 2. **A clear notice that Rockstar has nothing to do with your server.** Copy this text as it is:
 
 ```txt
@@ -49,6 +49,6 @@ If a rights holder sends us a formal complaint about your server, we will tell y
 
 ## Sources
 
-- [Rockstar Creator Program terms](https://www.rockstargames.com/legal)
-- [Cfx.re terms of service](https://cfx.re/terms)
+- [The FiveM platform licence agreement](https://fivem.net/terms)
+- [The FiveM server hosting page](https://fivem.net/server-hosting)
 - [Cfx.re key portal](https://portal.cfx.re)

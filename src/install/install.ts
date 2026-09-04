@@ -3,18 +3,23 @@ import {
 	applyDirectives,
 	connectionString,
 	generateDatabasePassword,
+	generatePanelPassword,
 	generatePlayersToken,
+	generateToken,
 	licenseKeyOf,
 	ownedDirectives,
-	requireLicenseKey,
+	serverPaths,
 } from "../shared";
 import { installArtifact, isArtifactInstalled, resolveRequestedArtifact } from "./installArtifact";
 import { installDatabase, writeDatabaseCredentials } from "./installDatabase";
 import { seedPanelResource } from "./installResource";
 import { seedServerConfig, seedServerData } from "./installServerData";
-import { type InstallStamp, readStamp, writeStamp } from "./installStamp";
+import { type InstallSecret, type InstallStamp, readStamp, writeStamp } from "./installStamp";
+import { seedTxAdminProfile, writeTxAdminEnvironment } from "./installTxAdmin";
 
-const secretOf = (stamp: InstallStamp | null, key: "databasePassword" | "playersToken", fallback: () => string) => {
+const CONTROL_TOKEN_LENGTH = 40;
+
+const secretOf = (stamp: InstallStamp | null, key: InstallSecret, fallback: () => string) => {
 	const current = stamp?.[key] ?? "";
 
 	return current.length > 0 ? current : fallback();
@@ -38,17 +43,31 @@ export const install: Bridge.Install = {
 			await installArtifact(context, artifact);
 		}
 
+		const licenseKey = licenseKeyOf(context);
+
 		await seedServerData(context);
-		await seedServerConfig(context);
-		await seedPanelResource(context);
+
+		const profileSeeded = await seedTxAdminProfile(context, licenseKey, stamp?.profileSeeded === true);
+
+		const paths = await serverPaths(context);
+
+		if (paths.deployed) {
+			context.log("txadmin is running a server deployed from its own setup page", {
+				dataPath: paths.dataPath,
+				cfgPath: paths.cfgPath,
+			});
+		}
+
+		await seedServerConfig(context, paths);
+		await seedPanelResource(context, paths);
 		await installDatabase(context);
 
 		const databasePassword = secretOf(stamp, "databasePassword", generateDatabasePassword);
 		const playersToken = secretOf(stamp, "playersToken", generatePlayersToken);
+		const controlToken = secretOf(stamp, "controlToken", () => generateToken(CONTROL_TOKEN_LENGTH));
+		const panelPassword = secretOf(stamp, "panelPassword", generatePanelPassword);
 
 		await writeDatabaseCredentials(context, databasePassword);
-
-		const licenseKey = licenseKeyOf(context);
 
 		await applyDirectives(
 			context,
@@ -57,23 +76,37 @@ export const install: Bridge.Install = {
 				licenseKey,
 				connectionString: connectionString(databasePassword),
 				playersToken,
+				controlToken,
 			}),
 		);
+
+		await writeTxAdminEnvironment(context, {
+			licenseKey,
+			controlToken,
+			databasePassword,
+			panelPassword,
+		});
 
 		await writeStamp(context, {
 			build: artifact.build,
 			reference: artifact.reference,
 			databasePassword,
 			playersToken,
+			controlToken,
+			panelPassword,
+			profileSeeded,
 		});
 
 		context.log("install complete", {
 			build: artifact.build,
 		});
 
-		// Everything above is persisted first, so the retry that follows a pasted
-		// key is a no-op reconcile rather than a second download.
-		requireLicenseKey(context);
+		// A missing key is the owner's to fix from the Setup tab, and they can
+		// only reach it while the panel is open, so the install persists
+		// everything and says what is missing rather than failing the provision.
+		if (licenseKey === null) {
+			context.log.warn("no cfx.re licence key yet — txadmin will run, the game server will not authenticate");
+		}
 	},
 	async describe(context) {
 		const stamp = await readStamp(context);

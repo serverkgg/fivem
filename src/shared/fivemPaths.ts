@@ -2,17 +2,15 @@ export const VOLUME_ROOT = "/home/container";
 
 export const SERVER_DATA_DIRECTORY = "server-data";
 
-export const RESOURCES_DIRECTORY = `${SERVER_DATA_DIRECTORY}/resources`;
-
-export const SERVER_CONFIG_FILE = `${SERVER_DATA_DIRECTORY}/server.cfg`;
+export const SERVER_CONFIG_NAME = "server.cfg";
 
 export const PANEL_RESOURCE = "serverk";
-
-export const PANEL_RESOURCE_DIRECTORY = `${RESOURCES_DIRECTORY}/[serverk]/${PANEL_RESOURCE}`;
 
 export const RUNTIME_DIRECTORY = "alpine";
 
 export const RUN_SCRIPT = "run.sh";
+
+export const RUN_PID_FILE = ".serverk-run.pid";
 
 export const ARTIFACT_ARCHIVE = ".serverk-artifact.tar.xz";
 
@@ -33,3 +31,21 @@ export const START_SCRIPT = "/serverk/start.sh";
 export const ANNOUNCE_MESSAGE_LENGTH = 200;
 
 export const FREE_SLOT_LIMIT = 48;
+
+export const MAX_SLOT_LIMIT = 2048;
+
+export const absolutePath = (path: string) => {
+	return `${VOLUME_ROOT}/${path}`;
+};
+
+export const volumePath = (absolute: string): string | null => {
+	const prefix = `${VOLUME_ROOT}/`;
+
+	if (!absolute.startsWith(prefix)) {
+		return null;
+	}
+
+	const relative = absolute.slice(prefix.length).replaceAll(/\/+$/g, "");
+
+	return relative.length > 0 ? relative : null;
+};

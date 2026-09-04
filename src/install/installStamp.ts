@@ -7,10 +7,19 @@ export interface InstallStamp {
 	reference: string;
 	databasePassword: string;
 	playersToken: string;
+	controlToken: string;
+	panelPassword: string;
+	profileSeeded: boolean;
 }
+
+export type InstallSecret = "databasePassword" | "playersToken" | "controlToken" | "panelPassword";
 
 const isText = (value: unknown): value is string => {
 	return typeof value === "string" && value.length > 0;
+};
+
+const textOr = (value: unknown, fallback: string) => {
+	return isText(value) ? value : fallback;
 };
 
 export const parseStamp = (raw: string): InstallStamp | null => {
@@ -24,8 +33,11 @@ export const parseStamp = (raw: string): InstallStamp | null => {
 		return {
 			build: parsed.build,
 			reference: parsed.reference,
-			databasePassword: isText(parsed.databasePassword) ? parsed.databasePassword : "",
-			playersToken: isText(parsed.playersToken) ? parsed.playersToken : "",
+			databasePassword: textOr(parsed.databasePassword, ""),
+			playersToken: textOr(parsed.playersToken, ""),
+			controlToken: textOr(parsed.controlToken, ""),
+			panelPassword: textOr(parsed.panelPassword, ""),
+			profileSeeded: parsed.profileSeeded === true,
 		};
 	} catch {
 		return null;

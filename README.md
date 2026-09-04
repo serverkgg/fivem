@@ -6,12 +6,27 @@ The FiveM game package for the Serverk platform (`serverk.gg`). This repo holds 
 
 ## Layout
 
-- `serverk.yml` — the game manifest: metadata, resources, ports, backup rules, guides.
-- `src/` — the bridge driver: install (FiveM artifact, cfx-server-data, MariaDB), lifecycle, query, backup, and the panel modules.
+- `serverk.yml` — the game manifest: metadata, resources, ports (`30120` tcp+udp for the game, `40120` tcp for txAdmin), backup rules, guides.
+- `src/` — the bridge driver: install (FiveM artifact, cfx-server-data, MariaDB, the txAdmin profile), lifecycle, query, backup, and the panel modules.
 - `image/Dockerfile` — the runtime image (Ubuntu, MariaDB, xz); the compiled bridge binary is its entrypoint.
-- `image/start.sh` — starts MariaDB, then FXServer with its stdin attached to the panel console.
+- `image/start.sh` — sources the `TXHOST_*` file, starts MariaDB, then runs FXServer with no `+exec` so it boots txAdmin, and forwards the panel console into the game.
 - `assets/` — logo and banner (webp).
 - `guides/` — player guides in Arabic and English.
+
+## How a server runs
+
+FXServer boots **txAdmin** rather than the game directly: `code/server/launcher/src/Server.cpp` picks `citizen:server:monitor` whenever the command line carries no `+exec`, and txAdmin then spawns the game itself. Serverk drives it the way txAdmin documents for hosting providers, through the `TXHOST_*` environment (`docs/env-config.md` in `citizenfx/txAdmin`):
+
+- `TXHOST_DATA_PATH` is `txData` inside the volume, `TXHOST_TXA_PORT` and `TXHOST_FXS_PORT` come from the manifest ports, and `TXHOST_INTERFACE` is `0.0.0.0`.
+- `TXHOST_DEFAULT_ACCOUNT` seeds `admins.json` with a `serverk` master account whose bcrypt hash the driver computes with `Bun.password`; the plaintext is shown in the panel's Setup tab.
+- `TXHOST_DEFAULT_CFXKEY` and `TXHOST_DEFAULT_DB*` pre-fill txAdmin's own deployer, so a framework recipe arrives with the licence key and the bundled MariaDB already filled in.
+- `TXHOST_QUIET_MODE` stays off, because the Serverk console is the live console.
+
+txAdmin only auto-starts a server once its profile names a data path and an admin exists, so the driver writes the first `txData/default/config.json` itself — the same file the setup page writes — pointing at the seeded `server-data`. That is what lets a freshly ordered server boot with no browser step. What remains browser-side is txAdmin's own **recipe deployer**, which only runs from the setup state; the panel's "Open the setup page" action clears the data path so the owner can reach it, and the driver follows whatever path txAdmin records afterwards.
+
+The panel console still works: txAdmin never reads its own stdin, so `start.sh` forwards each line the panel writes into the game through the bundled `[serverk]` resource, which exposes a token-guarded endpoint on the game port and runs the line with `ExecuteCommand`.
+
+Builds are resolved from `https://changelogs-live.fivem.net/api/changelog/versions/linux/server` — recommended, latest, and only the pinned builds whose `support_policy` window is still open — with the HTML artifacts listing as the fallback and as the only source of a pinned build's revision.
 
 ## Develop
 

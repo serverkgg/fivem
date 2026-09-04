@@ -1,7 +1,7 @@
 import type { Bridge } from "@serverkgg/bridge";
 import {
-	RESOURCES_DIRECTORY,
-	SERVER_CONFIG_FILE,
+	DEFAULT_PATHS,
+	type FivemServerPaths,
 	SERVER_DATA_ARCHIVE,
 	SERVER_DATA_DIRECTORY,
 	serverConfigTemplate,
@@ -10,7 +10,7 @@ import {
 const SERVER_DATA_TARBALL = "https://codeload.github.com/citizenfx/cfx-server-data/tar.gz/refs/heads/master";
 
 export const seedServerData = async (context: Bridge.Context) => {
-	if (await context.files.exists(RESOURCES_DIRECTORY)) {
+	if (await context.files.exists(DEFAULT_PATHS.resources)) {
 		return;
 	}
 
@@ -34,23 +34,22 @@ export const seedServerData = async (context: Bridge.Context) => {
 		throw new Error(`unpacking cfx-server-data failed with code ${result.code}: ${result.stderr.slice(0, 400)}`);
 	}
 
-	if (!(await context.files.exists(RESOURCES_DIRECTORY))) {
-		throw new Error(`cfx-server-data unpacked but ${RESOURCES_DIRECTORY} is missing`);
+	if (!(await context.files.exists(DEFAULT_PATHS.resources))) {
+		throw new Error(`cfx-server-data unpacked but ${DEFAULT_PATHS.resources} is missing`);
 	}
 
 	context.log("vanilla fivem resources installed");
 };
 
-export const seedServerConfig = async (context: Bridge.Context) => {
-	if (await context.files.exists(SERVER_CONFIG_FILE)) {
+export const seedServerConfig = async (context: Bridge.Context, paths: FivemServerPaths) => {
+	if (await context.files.exists(paths.cfgPath)) {
 		return;
 	}
 
-	context.log("writing the first server.cfg");
+	context.log("writing the first server.cfg", {
+		path: paths.cfgPath,
+	});
 
-	await context.files.ensure(SERVER_DATA_DIRECTORY);
-	await context.files.write(
-		SERVER_CONFIG_FILE,
-		serverConfigTemplate(context.port("game"), `سيرفر ${context.server.code}`),
-	);
+	await context.files.ensure(paths.dataPath);
+	await context.files.write(paths.cfgPath, serverConfigTemplate(context.port("game"), `سيرفر ${context.server.code}`));
 };

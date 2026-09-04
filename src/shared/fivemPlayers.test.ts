@@ -59,20 +59,24 @@ describe("preferredIdentifier", () => {
 
 describe("rosterOf", () => {
 	test("maps players.json into rows", () => {
-		expect(rosterOf(PAYLOAD)).toEqual([
-			{
-				id: "1",
-				name: "Mohammed",
-				ping: 34,
-				identifier: "license:1234567890abcdef1234567890abcdef12345678",
-			},
-			{
-				id: "2",
-				name: "خالد",
-				ping: 0,
-				identifier: "steam:110000100000001",
-			},
-		]);
+		expect(rosterOf(PAYLOAD)).toEqual({
+			count: 2,
+			anonymous: false,
+			entries: [
+				{
+					id: "1",
+					name: "Mohammed",
+					ping: 34,
+					identifier: "license:1234567890abcdef1234567890abcdef12345678",
+				},
+				{
+					id: "2",
+					name: "خالد",
+					ping: 0,
+					identifier: "steam:110000100000001",
+				},
+			],
+		});
 	});
 
 	test("keeps a player with no name under their id", () => {
@@ -82,7 +86,7 @@ describe("rosterOf", () => {
 					id: 7,
 					identifiers: [],
 				},
-			]).at(0),
+			]).entries.at(0),
 		).toEqual({
 			id: "7",
 			name: "#7",
@@ -97,7 +101,7 @@ describe("rosterOf", () => {
 				{
 					name: "ghost",
 				},
-			]),
+			]).entries,
 		).toEqual([]);
 	});
 
@@ -109,13 +113,36 @@ describe("rosterOf", () => {
 					name: "Sara",
 					ping: "12",
 				},
-			]).at(0)?.ping,
+			]).entries.at(0)?.ping,
 		).toBe(12);
 	});
 
+	test("reads an anonymised roster as a count and no rows", () => {
+		const roster = rosterOf([
+			{
+				endpoint: "127.0.0.1",
+				id: 0,
+				identifiers: [],
+				name: "Player",
+				ping: 0,
+			},
+			{
+				endpoint: "127.0.0.1",
+				id: 0,
+				identifiers: [],
+				name: "Player",
+				ping: 0,
+			},
+		]);
+
+		expect(roster.anonymous).toBe(true);
+		expect(roster.count).toBe(2);
+		expect(roster.entries).toEqual([]);
+	});
+
 	test("answers an empty roster for anything that is not an array", () => {
-		expect(rosterOf(null)).toEqual([]);
-		expect(rosterOf({})).toEqual([]);
-		expect(rosterOf("[]")).toEqual([]);
+		expect(rosterOf(null).entries).toEqual([]);
+		expect(rosterOf({}).anonymous).toBe(false);
+		expect(rosterOf("[]").count).toBe(0);
 	});
 });

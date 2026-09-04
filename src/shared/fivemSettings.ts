@@ -1,5 +1,6 @@
 import type { Bridge } from "@serverkgg/bridge";
-import { SERVER_CONFIG_FILE } from "./fivemPaths";
+import { serverPaths } from "./fivemServerPaths";
+import { ONESYNC_SETTING, onesyncOf, TXADMIN_CONFIG_FILE, withOnesync } from "./fivemTxAdmin";
 import { type ConfigDirective, readDirective, writeDirectives } from "./serverConfig";
 
 export enum SettingKind {
@@ -55,12 +56,10 @@ export const SETTING_BINDINGS: SettingBinding[] = [
 		kind: SettingKind.Text,
 	},
 	{
-		key: "onesync",
-		command: "set onesync",
-		quote: false,
-		kind: SettingKind.Toggle,
-		on: "on",
-		off: "off",
+		key: "steam_webApiKey",
+		command: "set steam_webApiKey",
+		quote: true,
+		kind: SettingKind.Text,
 	},
 	{
 		key: "sv_scriptHookAllowed",
@@ -152,11 +151,13 @@ export const settingDirectives = (values: Bridge.Values): ConfigDirective[] => {
 };
 
 export const readServerConfig = async (context: Bridge.Context) => {
-	if (!(await context.files.exists(SERVER_CONFIG_FILE))) {
+	const { cfgPath } = await serverPaths(context);
+
+	if (!(await context.files.exists(cfgPath))) {
 		return "";
 	}
 
-	return await context.files.read(SERVER_CONFIG_FILE);
+	return await context.files.read(cfgPath);
 };
 
 export const applyDirectives = async (context: Bridge.Context, directives: ConfigDirective[]) => {
@@ -164,15 +165,44 @@ export const applyDirectives = async (context: Bridge.Context, directives: Confi
 		return;
 	}
 
-	const content = await readServerConfig(context);
+	const { cfgPath } = await serverPaths(context);
+	const content = (await context.files.exists(cfgPath)) ? await context.files.read(cfgPath) : "";
 
-	await context.files.write(SERVER_CONFIG_FILE, writeDirectives(content, directives));
+	await context.files.write(cfgPath, writeDirectives(content, directives));
 };
 
-export const readSettings = async (context: Bridge.Context) => {
-	return settingsOf(await readServerConfig(context));
+const readOnesync = async (context: Bridge.Context) => {
+	if (!(await context.files.exists(TXADMIN_CONFIG_FILE))) {
+		return null;
+	}
+
+	return onesyncOf(await context.files.read(TXADMIN_CONFIG_FILE));
+};
+
+const writeOnesync = async (context: Bridge.Context, value: Bridge.Value) => {
+	if (value === null || !(await context.files.exists(TXADMIN_CONFIG_FILE))) {
+		return;
+	}
+
+	const enabled = typeof value === "boolean" ? value : TRUTHY.has(String(value).trim().toLowerCase());
+	const written = withOnesync(await context.files.read(TXADMIN_CONFIG_FILE), enabled);
+
+	if (written !== null) {
+		await context.files.write(TXADMIN_CONFIG_FILE, written);
+	}
+};
+
+export const readSettings = async (context: Bridge.Context): Promise<Bridge.Values> => {
+	return {
+		...settingsOf(await readServerConfig(context)),
+		[ONESYNC_SETTING]: await readOnesync(context),
+	};
 };
 
 export const writeSettings = async (context: Bridge.Context, values: Bridge.Values) => {
 	await applyDirectives(context, settingDirectives(values));
+
+	if (Object.hasOwn(values, ONESYNC_SETTING)) {
+		await writeOnesync(context, values[ONESYNC_SETTING] ?? null);
+	}
 };

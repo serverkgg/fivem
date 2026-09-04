@@ -72,8 +72,7 @@ export const serverConfigTemplate = (gamePort: number, hostname: string) => {
 		'set steam_webApiKey ""',
 		"",
 		"# License key for your server (https://portal.cfx.re)",
-		"# serverk writes this line from the licence key you paste in the panel.",
-		"sv_licenseKey changeme",
+		"# serverk writes an sv_licenseKey line here from the key you paste in the panel.",
 		"",
 	].join("\n");
 };

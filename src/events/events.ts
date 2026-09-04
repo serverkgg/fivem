@@ -2,6 +2,11 @@ import { type Bridge, BridgeKind } from "@serverkgg/bridge";
 
 export const SERVER_READY = /Server license key authentication succeeded|Authenticated with cfx\.re Nucleus/;
 
+// txAdmin prints this once its web server is listening and its admin account is
+// loaded (core/boot/startReadyWatcher.ts). It is the container's own service
+// coming up, and it happens whether or not the game server authenticates.
+export const PANEL_READY = /All ready! Please access/;
+
 export const LICENSE_REJECTED = /Could not authenticate server license key[^\n]{0,200}/;
 
 export const events: Bridge.Events = {

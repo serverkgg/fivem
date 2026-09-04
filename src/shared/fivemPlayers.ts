@@ -24,6 +24,12 @@ export type FivemRosterEntry = Bridge.Row & {
 	identifier: string | null;
 };
 
+export interface FivemRoster {
+	entries: FivemRosterEntry[];
+	count: number;
+	anonymous: boolean;
+}
+
 const identifiersOf = (value: unknown): string[] => {
 	if (!Array.isArray(value)) {
 		return [];
@@ -50,12 +56,20 @@ const numberOrNull = (value: unknown): number | null => {
 	return typeof value === "number" || typeof value === "string" ? (Number.isFinite(parsed) ? parsed : null) : null;
 };
 
-export const rosterOf = (payload: unknown): FivemRosterEntry[] => {
+// An anonymised payload carries one { id: 0, name: "Player" } per connected
+// player, so every entry collapses onto the same key. Counting them is the only
+// safe reading: a roster keyed on id 0 would report one player and turn every
+// join and leave into noise.
+export const rosterOf = (payload: unknown): FivemRoster => {
 	if (!Array.isArray(payload)) {
-		return [];
+		return {
+			entries: [],
+			count: 0,
+			anonymous: false,
+		};
 	}
 
-	return payload.flatMap((entry: FivemPlayerPayload) => {
+	const entries = payload.flatMap((entry: FivemPlayerPayload) => {
 		if (entry === null || typeof entry !== "object") {
 			return [];
 		}
@@ -78,4 +92,12 @@ export const rosterOf = (payload: unknown): FivemRosterEntry[] => {
 			},
 		];
 	});
+
+	const anonymous = entries.length > 0 && entries.every((entry) => entry.id === "0");
+
+	return {
+		entries: anonymous ? [] : entries,
+		count: payload.length,
+		anonymous,
+	};
 };

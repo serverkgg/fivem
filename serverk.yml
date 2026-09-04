@@ -53,10 +53,24 @@ container:
         default: 30120
         min: 30120
         max: 30219
+    - key: txadmin
+      containerPort: 40120
+      protocol: tcp
+      name:
+        ar: لوحة txAdmin
+        en: txAdmin panel
+      hint:
+        ar: افتح هذا العنوان في المتصفح وسجّل دخول بالمستخدم وكلمة المرور اللي في تبويب التجهيز.
+        en: Open this address in your browser and sign in with the username and password in the Setup tab.
+      hostRange:
+        default: 40120
+        min: 40120
+        max: 40219
 
 backup:
   only:
     - server-data/**
+    - txData/**
     - .serverk-database.sql
     - .serverk-install.json
   except:
@@ -64,6 +78,9 @@ backup:
     - server-data/logs/**
     - server-data/.fxserver-*/**
     - server-data/**/.git/**
+    - txData/**/cache/**
+    - txData/**/logs/**
+    - txData/**/.git/**
 
 reset:
   keep:
@@ -91,6 +108,8 @@ files:
     - .mariadb
     - .serverk-install.json
     - .serverk-database.sql
+    - .serverk-txhost.env
+    - .serverk-run.pid
   notable:
     - match: server-data/server.cfg
       label:
@@ -119,8 +138,18 @@ files:
       icon: shield
       color: "#e0a458"
       note:
-        ar: ريسورس صغير من سيرفرك يخلّي زر الطرد في اللوحة يشتغل. نعيد كتابته كل تركيب، لا تعدّله.
-        en: A small Serverk resource that makes the panel's kick button work. We rewrite it on every install — do not edit it.
+        ar: ريسورس صغير من سيرفرك يوصّل أوامر الكونسول وزر الطرد للسيرفر. نعيد كتابته كل تركيب، لا تعدّله.
+        en: A small Serverk resource that carries the panel's console commands and kick button into the server. We rewrite it on every install — do not edit it.
+    - match: txData
+      label:
+        ar: بيانات txAdmin
+        en: txAdmin data
+      icon: shield
+      color: "#4361ee"
+      restart: true
+      note:
+        ar: كل شي يخص txAdmin — إعداداته وحسابه وسجلاته، وأي سيرفر ركّبته من صفحة التنصيب. النسخ الاحتياطية تاخذه معها.
+        en: Everything txAdmin owns — its config, its account, its logs, and any server you deployed from its setup page. Backups carry it.
     - match: server-data/cache
       label:
         ar: الكاش

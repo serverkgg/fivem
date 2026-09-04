@@ -1,13 +1,21 @@
-import { type Bridge, BridgeUserError } from "@serverkgg/bridge";
+import type { Bridge } from "@serverkgg/bridge";
 import { PANEL_RESOURCE } from "./fivemPaths";
 import type { ConfigDirective } from "./serverConfig";
 
 export const LICENSE_VARIABLE = "LICENSE_KEY";
 
-const LICENSE_KEY = /^[A-Za-z0-9_.:-]{8,128}$/;
+// shared/consts.ts in citizenfx/txAdmin: a Portal key is cfxk_<21>_<6> today
+// and the 32-character key the old portal issued is still accepted. A key that
+// matches neither makes txAdmin fatal-error on TXHOST_DEFAULT_CFXKEY, so the
+// panel refuses it before the container ever sees it.
+const LICENSE_KEY_NEW = /^cfxk_\w{1,60}_\w{1,20}$/;
+
+const LICENSE_KEY_OLD = /^\w{32}$/;
 
 export const isLicenseKey = (value: string) => {
-	return LICENSE_KEY.test(value.trim());
+	const key = value.trim();
+
+	return LICENSE_KEY_NEW.test(key) || LICENSE_KEY_OLD.test(key);
 };
 
 export const licenseKeyOf = (context: Bridge.Context) => {
@@ -16,28 +24,14 @@ export const licenseKeyOf = (context: Bridge.Context) => {
 	return isLicenseKey(value) ? value.trim() : null;
 };
 
-// FXServer exits within a second when sv_licenseKey is unset, so without this
-// the supervisor reads five crash-restarts and trips its breaker. The bridge
-// has no hold that can ask for a value rather than a file, so the honest stop
-// is an error carrying the one sentence the owner can act on.
-export const requireLicenseKey = (context: Bridge.Context) => {
-	const licenseKey = licenseKeyOf(context);
-
-	if (licenseKey === null) {
-		throw new BridgeUserError({
-			ar: "سيرفرك يبي مفتاح ترخيص من Cfx.re عشان يشتغل. سوّ مفتاح من portal.cfx.re/servers/registration-keys والصقه في تبويب التجهيز.",
-			en: "your server needs a Cfx.re licence key to run — create one at portal.cfx.re/servers/registration-keys and paste it into the Setup tab",
-		});
-	}
-
-	return licenseKey;
-};
+export const CONTROL_TOKEN_CONVAR = "serverk_controlToken";
 
 export interface OwnedConfig {
 	gamePort: number;
 	licenseKey: string | null;
 	connectionString: string | null;
 	playersToken: string | null;
+	controlToken: string | null;
 }
 
 export const ownedDirectives = (owned: OwnedConfig): ConfigDirective[] => {
@@ -45,6 +39,14 @@ export const ownedDirectives = (owned: OwnedConfig): ConfigDirective[] => {
 		{
 			command: `ensure ${PANEL_RESOURCE}`,
 			value: "",
+			quote: false,
+		},
+		// The panel's console, kick and announce paths all reach the game
+		// through this resource now that txAdmin owns the process and reads no
+		// stdin of its own, so it runs console commands on their behalf.
+		{
+			command: `add_ace resource.${PANEL_RESOURCE} command`,
+			value: "allow",
 			quote: false,
 		},
 		{
@@ -81,6 +83,14 @@ export const ownedDirectives = (owned: OwnedConfig): ConfigDirective[] => {
 		directives.push({
 			command: "set mysql_connection_string",
 			value: owned.connectionString,
+			quote: true,
+		});
+	}
+
+	if (owned.controlToken !== null) {
+		directives.push({
+			command: `set ${CONTROL_TOKEN_CONVAR}`,
+			value: owned.controlToken,
 			quote: true,
 		});
 	}

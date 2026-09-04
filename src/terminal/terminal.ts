@@ -86,15 +86,6 @@ const commands: Bridge.TerminalCommand[] = [
 		},
 		syntax: "load_server_icon <file.png>",
 	},
-	{
-		name: "quit",
-		summary: {
-			ar: "يوقف السيرفر.",
-			en: "Stop the server.",
-		},
-		syntax: "quit [reason]",
-		danger: true,
-	},
 ];
 
 const rules: Bridge.TerminalRule[] = [
@@ -112,6 +103,10 @@ const rules: Bridge.TerminalRule[] = [
 	},
 	{
 		match: /Couldn't find resource/,
+		level: BridgeTerminalLevel.Warn,
+	},
+	{
+		match: /\bEnd of Support\b|\bEnd of Life\b/i,
 		level: BridgeTerminalLevel.Warn,
 	},
 	{

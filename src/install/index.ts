@@ -4,3 +4,4 @@ export * from "./installDatabase";
 export * from "./installResource";
 export * from "./installServerData";
 export * from "./installStamp";
+export * from "./installTxAdmin";

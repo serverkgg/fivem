@@ -1,9 +1,9 @@
 import type { BridgeDriver } from "@serverkgg/bridge";
-import { live } from "./actions";
+import { databaseTools, live } from "./actions";
 import { announce } from "./announce";
 import { backup } from "./backup";
 import { players } from "./collections";
-import { database } from "./details";
+import { database, txadmin } from "./details";
 import { events } from "./events";
 import { install } from "./install";
 import { lifecycle } from "./lifecycle";
@@ -27,6 +27,8 @@ export const driver: BridgeDriver = {
 		settings,
 		players,
 		database,
+		databaseTools,
+		txadmin,
 		live,
 	},
 };

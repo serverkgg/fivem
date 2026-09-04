@@ -3,20 +3,49 @@ import {
 	ARTIFACT_ARCHIVE,
 	ARTIFACT_VARIABLE,
 	ARTIFACTS_LISTING,
+	CHANGELOG_VERSIONS,
+	changelogArtifact,
 	type FivemArtifact,
+	type FivemChangelog,
+	listingArtifact,
 	RUN_SCRIPT,
 	RUNTIME_DIRECTORY,
-	resolveArtifact,
+	requestedArtifact,
 } from "../shared";
 
-const LISTING_CACHE_SECONDS = 900;
+const CACHE_SECONDS = 900;
 
+export const readChangelog = async (context: Bridge.Context): Promise<FivemChangelog | null> => {
+	try {
+		return await context.net.json<FivemChangelog>(CHANGELOG_VERSIONS, {
+			cacheSeconds: CACHE_SECONDS,
+		});
+	} catch (error) {
+		context.log.warn("the fivem changelog api did not answer, falling back to the artifacts listing", {
+			error: error instanceof Error ? error.message : String(error),
+		});
+
+		return null;
+	}
+};
+
+// Cfx publishes recommended and latest with their download urls on the
+// changelog api, which is what the Pterodactyl and Pelican eggs read; the html
+// listing is the fallback and the only place a pinned build's revision lives.
 export const resolveRequestedArtifact = async (context: Bridge.Context): Promise<FivemArtifact> => {
+	const requested = requestedArtifact(context.variable(ARTIFACT_VARIABLE));
+	const changelog = await readChangelog(context);
+	const resolved = changelog === null ? null : changelogArtifact(changelog, requested);
+
+	if (resolved !== null) {
+		return resolved;
+	}
+
 	const listing = await context.net.text(ARTIFACTS_LISTING, {
-		cacheSeconds: LISTING_CACHE_SECONDS,
+		cacheSeconds: CACHE_SECONDS,
 	});
 
-	return resolveArtifact(listing, context.variable(ARTIFACT_VARIABLE));
+	return listingArtifact(listing, requested);
 };
 
 export const isArtifactInstalled = async (context: Bridge.Context) => {

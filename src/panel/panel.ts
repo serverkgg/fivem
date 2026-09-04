@@ -6,7 +6,7 @@ import {
 	BridgeIcon,
 	BridgeLayout,
 } from "@serverkgg/bridge";
-import { ANNOUNCE_MESSAGE_LENGTH, ARTIFACT_VARIABLE, FREE_SLOT_LIMIT, LICENSE_VARIABLE } from "../shared";
+import { ANNOUNCE_MESSAGE_LENGTH, ARTIFACT_VARIABLE, LICENSE_VARIABLE, MAX_SLOT_LIMIT } from "../shared";
 
 const setupTab: Bridge.Tab = {
 	id: "setup",
@@ -39,11 +39,11 @@ const setupTab: Bridge.Tab = {
 						en: "Licence key",
 					},
 					help: {
-						ar: "سوّ حساب في portal.cfx.re، أنشئ مفتاح جديد، والصقه هنا. بدونه فايف إم ما يشتغل.",
-						en: "Create an account on portal.cfx.re, generate a key, and paste it here. FiveM will not run without one.",
+						ar: "سوّ حساب في portal.cfx.re، أنشئ مفتاح جديد باسم تختاره، والصقه هنا. المفتاح 33 حرف ويبدأ بـ cfxk_. بدونه فايف إم ما يشتغل.",
+						en: "Create an account on portal.cfx.re, generate a key under any display name, and paste it here. The key is 33 characters and starts with cfxk_. FiveM will not run without one.",
 					},
-					placeholder: "cfxk_...",
-					maxLength: 128,
+					placeholder: "cfxk_xxxxxxxxxxxxxxxxxxxxx_xxxxxx",
+					maxLength: 64,
 				},
 				{
 					key: ARTIFACT_VARIABLE,
@@ -61,6 +61,33 @@ const setupTab: Bridge.Tab = {
 					},
 				},
 			],
+		},
+		{
+			layout: BridgeLayout.Detail,
+			id: "txadmin",
+			title: {
+				ar: "لوحة txAdmin",
+				en: "The txAdmin panel",
+			},
+			module: "txadmin",
+			actions: [
+				{
+					id: "setup",
+					label: {
+						ar: "افتح صفحة التنصيب",
+						en: "Open the setup page",
+					},
+					confirm: BridgeConfirm.Strong,
+					confirmText: {
+						ar: "نرجّع txAdmin لصفحة التنصيب عشان تختار ريسيبي زي ESX أو QBCore. سيرفرك الحالي وملفاته تبقى مكانها، بس السيرفر ما يشتغل لين تخلّص التنصيب من المتصفح.",
+						en: "We send txAdmin back to its setup page so you can pick a recipe like ESX or QBCore. Your current files stay where they are, but the server will not start again until you finish the setup in the browser.",
+					},
+				},
+			],
+			empty: {
+				ar: "لوحة txAdmin لسه تتجهّز. افتح التبويب بعد ما يخلص التركيب.",
+				en: "txAdmin is still being set up. Come back once the install finishes.",
+			},
 		},
 	],
 };
@@ -123,11 +150,25 @@ const settingsTab: Bridge.Tab = {
 						en: "Max players",
 					},
 					help: {
-						ar: "48 هو الحد المجاني من Cfx.re. فوق كذا يبي لك اشتراك Element Club على حسابك.",
-						en: "48 is the free Cfx.re cap. Going higher needs an Element Club subscription on your account.",
+						ar: "48 هو الحد المجاني من Cfx.re. فوق 48 يبي اشتراك Element Club على حسابك، وفوق 64 لازم OneSync يكون مفعّل.",
+						en: "48 is the free Cfx.re cap. Above 48 needs an Element Club subscription on your own account, and above 64 needs OneSync on.",
 					},
 					min: 1,
-					max: FREE_SLOT_LIMIT,
+					max: MAX_SLOT_LIMIT,
+				},
+				{
+					key: "steam_webApiKey",
+					control: BridgeControl.Text,
+					label: {
+						ar: "مفتاح Steam Web API",
+						en: "Steam Web API key",
+					},
+					help: {
+						ar: "اختياري. لما تحطه يقدر السيرفر يقرأ معرّف ستيم للاعبين، وبعض السكربتات تبيه.",
+						en: "Optional. With one set the server can read players' Steam identifiers, which some scripts need.",
+					},
+					placeholder: "steamcommunity.com/dev/apikey",
+					maxLength: 64,
 				},
 				{
 					key: "locale",
@@ -188,8 +229,8 @@ const settingsTab: Bridge.Tab = {
 						en: "OneSync",
 					},
 					help: {
-						ar: "لازم يكون مفعّل لأغلب فريموركات الرول بلاي زي ESX و QBCore.",
-						en: "Most roleplay frameworks, ESX and QBCore included, need this on.",
+						ar: "لازم يكون مفعّل لأغلب فريموركات الرول بلاي زي ESX و QBCore. نكتبه في إعدادات txAdmin، لأنها هي اللي تشغّل السيرفر.",
+						en: "Most roleplay frameworks, ESX and QBCore included, need this on. We write it into txAdmin's own settings, because txAdmin is what starts the server.",
 					},
 				},
 				{
@@ -308,6 +349,49 @@ const databaseTab: Bridge.Tab = {
 				ar: "قاعدة البيانات لسه تتجهّز. افتح التبويب بعد ما يخلص التركيب.",
 				en: "The database is still being set up. Come back once the install finishes.",
 			},
+		},
+		{
+			layout: BridgeLayout.Actions,
+			id: "import",
+			title: {
+				ar: "استيراد SQL",
+				en: "Import SQL",
+			},
+			help: {
+				ar: "ارفع ملف .sql من مدير الملفات واكتب مساره هنا عشان ننفّذه على قاعدة بياناتك.",
+				en: "Upload a .sql file with the file manager, then name its path here and we run it against your database.",
+			},
+			module: "databaseTools",
+			actions: [
+				{
+					id: "importSql",
+					label: {
+						ar: "نفّذ ملف SQL",
+						en: "Run a SQL file",
+					},
+					confirm: BridgeConfirm.Normal,
+					confirmText: {
+						ar: "ننفّذ الملف على قاعدة بياناتك. إذا كان الملف يعدّل جداول موجودة، بياناتها تتغيّر.",
+						en: "We run the file against your database. If it changes tables you already have, their data changes with them.",
+					},
+					fields: [
+						{
+							key: "path",
+							control: BridgeControl.Text,
+							label: {
+								ar: "مسار الملف",
+								en: "File path",
+							},
+							help: {
+								ar: "المسار من جذر سيرفرك، مثال: server-data/esx.sql",
+								en: "The path from your server's root, for example server-data/esx.sql",
+							},
+							placeholder: "server-data/esx.sql",
+							maxLength: 200,
+						},
+					],
+				},
+			],
 		},
 	],
 };

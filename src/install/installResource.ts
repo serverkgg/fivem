@@ -1,5 +1,5 @@
 import type { Bridge } from "@serverkgg/bridge";
-import { PANEL_RESOURCE, PANEL_RESOURCE_DIRECTORY } from "../shared";
+import { CONTROL_TOKEN_CONVAR, type FivemServerPaths, PANEL_RESOURCE } from "../shared";
 
 const MANIFEST = `fx_version 'cerulean'
 game 'gta5'
@@ -7,14 +7,32 @@ game 'gta5'
 name '${PANEL_RESOURCE}'
 description 'Serverk panel bridge — console commands the panel drives'
 author 'Serverk'
-version '1.0.0'
+version '2.0.0'
 
 server_script 'sv_serverk.lua'
 `;
 
-// clientkick and status used to come from rconlog, which cfx-server-data
-// dropped on 2026-07-20, so the panel ships the one command it needs.
+// txAdmin owns the FXServer process and reads no stdin of its own, so the panel
+// console reaches the game through this endpoint instead. It listens on the
+// game port under /serverk/ and answers only to the token serverk writes into
+// server.cfg on every install.
 const SCRIPT = `local DEFAULT_REASON = 'You were removed by an admin.'
+
+local function controlToken()
+	return GetConvar('${CONTROL_TOKEN_CONVAR}', '')
+end
+
+local function authorized(request)
+	local expected = controlToken()
+
+	if expected == '' then
+		return false
+	end
+
+	local offered = request.headers['X-Serverk-Token'] or request.headers['x-serverk-token']
+
+	return offered == expected
+end
 
 RegisterCommand('serverk_kick', function(source, args)
 	if source ~= 0 then
@@ -40,11 +58,45 @@ RegisterCommand('serverk_kick', function(source, args)
 	end
 
 	DropPlayer(target, reason)
-end, true)
+end, false)
+
+SetHttpHandler(function(request, response)
+	local function reply(status, body)
+		response.writeHead(status, { ['Content-Type'] = 'text/plain; charset=utf-8' })
+		response.send(body)
+	end
+
+	if request.method ~= 'POST' then
+		reply(405, 'method not allowed')
+		return
+	end
+
+	if not authorized(request) then
+		reply(403, 'forbidden')
+		return
+	end
+
+	if request.path ~= '/command' then
+		reply(404, 'not found')
+		return
+	end
+
+	request.setDataHandler(function(body)
+		local command = body:gsub('[\\r\\n]+', ' '):gsub('^%s+', ''):gsub('%s+$', '')
+
+		if command == '' then
+			reply(400, 'empty command')
+			return
+		end
+
+		ExecuteCommand(command)
+		reply(200, 'ok')
+	end)
+end)
 `;
 
-export const seedPanelResource = async (context: Bridge.Context) => {
-	await context.files.ensure(PANEL_RESOURCE_DIRECTORY);
-	await context.files.write(`${PANEL_RESOURCE_DIRECTORY}/fxmanifest.lua`, MANIFEST);
-	await context.files.write(`${PANEL_RESOURCE_DIRECTORY}/sv_serverk.lua`, SCRIPT);
+export const seedPanelResource = async (context: Bridge.Context, paths: FivemServerPaths) => {
+	await context.files.ensure(paths.panelResource);
+	await context.files.write(`${paths.panelResource}/fxmanifest.lua`, MANIFEST);
+	await context.files.write(`${paths.panelResource}/sv_serverk.lua`, SCRIPT);
 };

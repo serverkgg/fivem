@@ -1,12 +1,10 @@
 import { type Bridge, BridgeUserError } from "@serverkgg/bridge";
 import { DATABASE_NAME } from "./fivemDatabase";
-import { DATABASE_CLIENT_FILE, DATABASE_DUMP_FILE, VOLUME_ROOT } from "./fivemPaths";
+import { absolutePath as absolute, DATABASE_CLIENT_FILE, DATABASE_DUMP_FILE } from "./fivemPaths";
 
 const DUMP_TIMEOUT_MS = 300_000;
 
-const absolute = (path: string) => {
-	return `${VOLUME_ROOT}/${path}`;
-};
+const SQL_PATH = /^[\w][\w./-]{0,200}\.sql$/i;
 
 export const clientOptionFile = (password: string, socket: string, user: string) => {
 	return [
@@ -84,4 +82,60 @@ export const restoreDatabase = async (context: Bridge.Context) => {
 	}
 
 	context.log("database restored from the dump");
+};
+
+export const sqlPathArgument = (value: string) => {
+	const path = value.trim().replace(/^\/+/, "");
+
+	if (!SQL_PATH.test(path) || path.includes("..")) {
+		throw new BridgeUserError({
+			ar: "اكتب مسار ملف .sql داخل سيرفرك، مثال: server-data/esx.sql",
+			en: "give the path of a .sql file inside your server, for example server-data/esx.sql",
+		});
+	}
+
+	return path;
+};
+
+// Frameworks ship their schema as a .sql file. The owner uploads it with the
+// file manager and names it here, which is the same route txAdmin's recipes
+// take when they run a framework's SQL against the deployer's database.
+export const importSql = async (context: Bridge.Context, path: string) => {
+	if (!(await context.files.exists(DATABASE_CLIENT_FILE))) {
+		throw new BridgeUserError({
+			ar: "قاعدة البيانات لسه ما جهزت. شغّل السيرفر مرة وجرّب بعدها.",
+			en: "the database is not ready yet — start the server once and try again",
+		});
+	}
+
+	if (!(await context.files.exists(path))) {
+		throw new BridgeUserError({
+			ar: "ما لقينا الملف. تأكد من المسار في مدير الملفات.",
+			en: "we could not find that file — check the path in the file manager",
+		});
+	}
+
+	const result = await context.exec(
+		[
+			"mariadb",
+			`--defaults-file=${absolute(DATABASE_CLIENT_FILE)}`,
+			DATABASE_NAME,
+			"-e",
+			`source ${absolute(path)}`,
+		],
+		{
+			timeoutMs: DUMP_TIMEOUT_MS,
+		},
+	);
+
+	if (result.code !== 0) {
+		throw new BridgeUserError({
+			ar: `ما قدرنا ننفّذ الملف على قاعدة البيانات: ${result.stderr.slice(0, 200)}`,
+			en: `we could not run that file against the database: ${result.stderr.slice(0, 200)}`,
+		});
+	}
+
+	context.log("sql file imported into the database", {
+		path,
+	});
 };
