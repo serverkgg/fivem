@@ -12,7 +12,7 @@ import {
 } from "../shared";
 import { installArtifact, isArtifactInstalled, resolveRequestedArtifact } from "./installArtifact";
 import { installDatabase, writeDatabaseCredentials } from "./installDatabase";
-import { seedPanelResource } from "./installResource";
+import { seedChatResource, seedPanelResource } from "./installResource";
 import { seedServerConfig, seedServerData } from "./installServerData";
 import { type InstallSecret, type InstallStamp, readStamp, writeStamp } from "./installStamp";
 import { seedTxAdminProfile, writeTxAdminEnvironment } from "./installTxAdmin";
@@ -59,6 +59,7 @@ export const install: Bridge.Install = {
 		}
 
 		await seedServerConfig(context, paths);
+		await seedChatResource(context, paths);
 		await seedPanelResource(context, paths);
 		await installDatabase(context);
 

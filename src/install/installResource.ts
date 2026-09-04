@@ -1,5 +1,5 @@
 import type { Bridge } from "@serverkgg/bridge";
-import { CONTROL_TOKEN_CONVAR, type FivemServerPaths, PANEL_RESOURCE } from "../shared";
+import { CONTROL_TOKEN_CONVAR, type FivemServerPaths, PANEL_RESOURCE, RUNTIME_DIRECTORY } from "../shared";
 
 const MANIFEST = `fx_version 'cerulean'
 game 'gta5'
@@ -99,4 +99,44 @@ export const seedPanelResource = async (context: Bridge.Context, paths: FivemSer
 	await context.files.ensure(paths.panelResource);
 	await context.files.write(`${paths.panelResource}/fxmanifest.lua`, MANIFEST);
 	await context.files.write(`${paths.panelResource}/sv_serverk.lua`, SCRIPT);
+};
+
+const SYSTEM_CHAT = `${RUNTIME_DIRECTORY}/opt/cfx-server/citizen/system_resources/chat`;
+
+const CHAT_GROUP = "[gameplay]";
+
+// cfx-server-data deleted [gameplay]/chat on 2026-07-20, and the copy the
+// artifact carries under citizen/system_resources is scanned but never
+// startable by name — a server that ensures it only prints "Couldn't find
+// resource chat", which leaves players with no chat and no `say` command. The
+// artifact's copy is the right one for the build, so it is placed where the
+// server can actually start it.
+export const seedChatResource = async (context: Bridge.Context, paths: FivemServerPaths) => {
+	const group = `${paths.resources}/${CHAT_GROUP}`;
+	const target = `${group}/chat`;
+
+	if (await context.files.exists(target)) {
+		return;
+	}
+
+	if (!(await context.files.exists(SYSTEM_CHAT))) {
+		context.log.warn("this fivem build ships no chat resource to seed");
+
+		return;
+	}
+
+	await context.files.ensure(group);
+
+	const result = await context.exec([
+		"cp",
+		"-r",
+		SYSTEM_CHAT,
+		`${group}/`,
+	]);
+
+	if (result.code !== 0) {
+		throw new Error(`seeding the chat resource failed with code ${result.code}: ${result.stderr.slice(0, 400)}`);
+	}
+
+	context.log("chat resource seeded from the artifact");
 };
