@@ -204,6 +204,7 @@ guides:
       - overview
       - panel
       - files
+      - backups
     bodyPath:
       ar: guides/frameworks/ar.md
       en: guides/frameworks/en.md

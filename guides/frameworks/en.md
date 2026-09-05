@@ -85,7 +85,7 @@ Or restart the whole server from the panel — easier and more reliable the firs
 
 ## Backups
 
-Every backup we take carries a **full dump of your database**, and txAdmin's own data with it. Restoring a backup brings your files straight back, and the database is one button away in the Database tab.
+Every backup taken **after the database is set up** carries a full dump of it, and txAdmin's own data with it. Backups taken before you installed the framework hold your files only. Restoring a backup brings your files straight back, and the database is one button away in the Database tab.
 
 > [!warning]
 > Restoring the database wipes everything written since that backup. Your players lose the money and vehicles they earned after it.
