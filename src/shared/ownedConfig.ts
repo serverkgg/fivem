@@ -30,6 +30,7 @@ export interface OwnedConfig {
 	connectionString: string | null;
 	playersToken: string | null;
 	controlToken: string | null;
+	rconPassword: string;
 }
 
 export const ownedDirectives = (owned: OwnedConfig): ConfigDirective[] => {
@@ -92,6 +93,15 @@ export const ownedDirectives = (owned: OwnedConfig): ConfigDirective[] => {
 			quote: true,
 		});
 	}
+
+	// FXServer answers RCON on the game port only while rcon_password is set,
+	// so the panel's remote access toggle decides whether the line carries the
+	// password or stays empty.
+	directives.push({
+		command: "set rcon_password",
+		value: owned.rconPassword,
+		quote: true,
+	});
 
 	return directives;
 };

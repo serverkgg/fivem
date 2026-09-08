@@ -3,7 +3,7 @@ import { databaseTools, live } from "./actions";
 import { announce } from "./announce";
 import { backup } from "./backup";
 import { players } from "./collections";
-import { database, txadmin } from "./details";
+import { database, rconAccess, txadmin } from "./details";
 import { events } from "./events";
 import { install } from "./install";
 import { lifecycle } from "./lifecycle";
@@ -32,5 +32,6 @@ export const driver: BridgeDriver = {
 		databaseTools,
 		txadmin,
 		live,
+		rconAccess,
 	},
 };

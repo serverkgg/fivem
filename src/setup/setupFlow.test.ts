@@ -5,8 +5,10 @@ import { LICENSE_VARIABLE } from "../shared";
 import {
 	checkLicence,
 	FivemSetupPhase,
+	forgetVerdict,
 	outcomeOf,
 	RETRY_ACTION,
+	reportStopped,
 	runtimeOf,
 	startingRuntime,
 	tailOutcome,
@@ -36,8 +38,8 @@ describe("telling the customer where the licence check stands", () => {
 		}
 	});
 
-	test("leaves the check pending and offers a retry while no key is saved", () => {
-		expect(stateOf(FivemSetupPhase.MissingKey)).toBe(BridgeSetupStepState.Pending);
+	test("keeps the check active and offers a retry while no key is saved", () => {
+		expect(stateOf(FivemSetupPhase.MissingKey)).toBe(BridgeSetupStepState.Active);
 
 		const prompt = promptOf(FivemSetupPhase.MissingKey);
 
@@ -62,8 +64,8 @@ describe("telling the customer where the licence check stands", () => {
 		expect(promptOf(FivemSetupPhase.Ready)).toBeNull();
 	});
 
-	test("fails the step with a retry when cfx.re refuses the key", () => {
-		expect(stateOf(FivemSetupPhase.Rejected)).toBe(BridgeSetupStepState.Failed);
+	test("keeps the step active with a retry when cfx.re refuses the key", () => {
+		expect(stateOf(FivemSetupPhase.Rejected)).toBe(BridgeSetupStepState.Active);
 
 		const prompt = promptOf(FivemSetupPhase.Rejected);
 
@@ -73,9 +75,20 @@ describe("telling the customer where the licence check stands", () => {
 		]);
 	});
 
-	test("fails the step with a retry when cfx.re never answers", () => {
-		expect(stateOf(FivemSetupPhase.Silent)).toBe(BridgeSetupStepState.Failed);
+	test("keeps the step active with a retry when cfx.re never answers", () => {
+		expect(stateOf(FivemSetupPhase.Silent)).toBe(BridgeSetupStepState.Active);
 		expect(promptOf(FivemSetupPhase.Silent)?.kind).toBe(BridgeSetupPromptKind.Failed);
+	});
+
+	// The status frame carries only the id of the step the runtime marks Active, so
+	// a phase that marks no step active tells the platform the driver moved off the
+	// step. Ready is the one phase where that is true.
+	test("names the verify step in every phase but the one that finishes it", () => {
+		for (const phase of Object.values(FivemSetupPhase)) {
+			expect(stateOf(phase)).toBe(
+				phase === FivemSetupPhase.Ready ? BridgeSetupStepState.Done : BridgeSetupStepState.Active,
+			);
+		}
 	});
 
 	test("writes every prompt and every button in both arabic and english", () => {
@@ -335,5 +348,68 @@ describe("checking a licence key against a console that keeps respawning", () =>
 		expect(reports).toEqual([
 			runtimeOf(FivemSetupPhase.MissingKey),
 		]);
+	});
+});
+
+describe("what the driver says when the owner stops the server", () => {
+	test("asks for the key when none is saved", () => {
+		forgetVerdict();
+
+		const { context, reports } = harness([], "not-a-key");
+
+		reportStopped(context);
+
+		expect(reports).toEqual([
+			runtimeOf(FivemSetupPhase.MissingKey),
+		]);
+	});
+
+	test("waits for a start when a key is saved and no verdict has come in", () => {
+		forgetVerdict();
+
+		const { context, reports } = harness([]);
+
+		reportStopped(context);
+
+		expect(reports).toEqual([
+			runtimeOf(FivemSetupPhase.Stopped),
+		]);
+	});
+
+	// The platform reopens a settled setup as soon as a driver names an active
+	// step, so claiming the check is pending again would put the flow back in
+	// front of an owner who only stopped their server.
+	test("keeps the verdict cfx.re already gave this container", async () => {
+		forgetVerdict();
+
+		const { context, reports } = harness([
+			CHECKING_LINE,
+			READY_LINE,
+		]);
+
+		await checkLicence(context);
+		await Bun.sleep(SETTLE_MS);
+
+		reportStopped(context);
+
+		expect(reports.at(-1)).toEqual(runtimeOf(FivemSetupPhase.Ready));
+	});
+
+	test("goes back to waiting once a later check answers something else", async () => {
+		forgetVerdict();
+
+		const { context, reports, print } = harness([
+			CHECKING_LINE,
+		]);
+
+		await checkLicence(context);
+		await Bun.sleep(SETTLE_MS);
+
+		print(REJECTED_LINE);
+		await Bun.sleep(SETTLE_MS);
+
+		reportStopped(context);
+
+		expect(reports.at(-1)).toEqual(runtimeOf(FivemSetupPhase.Stopped));
 	});
 });

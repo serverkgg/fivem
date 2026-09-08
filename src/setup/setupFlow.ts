@@ -68,6 +68,13 @@ export enum FivemSetupPhase {
 	Silent = "silent",
 }
 
+// Only the step the runtime marks Active reaches the platform: the status frame
+// carries `{ step, attention }`, where `step` is that id and nothing else. A
+// runtime that marks the step Pending or Failed therefore tells the platform no
+// driver step is running, which is what it reads to decide whether a later
+// "nothing active, no prompt" means the check finished and whether a settled
+// record reopens. So the step is Active in every phase that is not Ready — the
+// driver is still on it, and the prompt is what says why it cannot move.
 const stepsOf = (verify: BridgeSetupStepState): Bridge.SetupStepStatus[] => {
 	return [
 		{
@@ -81,7 +88,7 @@ export const runtimeOf = (phase: FivemSetupPhase): Bridge.SetupRuntime => {
 	switch (phase) {
 		case FivemSetupPhase.MissingKey: {
 			return {
-				steps: stepsOf(BridgeSetupStepState.Pending),
+				steps: stepsOf(BridgeSetupStepState.Active),
 				prompt: {
 					kind: BridgeSetupPromptKind.Action,
 					message: MISSING_KEY_MESSAGE,
@@ -121,7 +128,7 @@ export const runtimeOf = (phase: FivemSetupPhase): Bridge.SetupRuntime => {
 
 		case FivemSetupPhase.Rejected: {
 			return {
-				steps: stepsOf(BridgeSetupStepState.Failed),
+				steps: stepsOf(BridgeSetupStepState.Active),
 				prompt: {
 					kind: BridgeSetupPromptKind.Failed,
 					message: REJECTED_MESSAGE,
@@ -134,7 +141,7 @@ export const runtimeOf = (phase: FivemSetupPhase): Bridge.SetupRuntime => {
 
 		case FivemSetupPhase.Silent: {
 			return {
-				steps: stepsOf(BridgeSetupStepState.Failed),
+				steps: stepsOf(BridgeSetupStepState.Active),
 				prompt: {
 					kind: BridgeSetupPromptKind.Failed,
 					message: SILENT_MESSAGE,
@@ -189,6 +196,14 @@ interface SetupRun {
 
 let running: SetupRun | null = null;
 
+// A verdict Cfx.re gave this container stays true after the game is stopped, and
+// the platform reads a named active step as "this flow is open again" — so a
+// driver that answers "waiting to check the licence" on every stop reopens a
+// settled setup on a server whose only sin was being stopped. The flag lives as
+// long as the process that watched the console does, which is exactly as long as
+// the verdict it remembers.
+let verified = false;
+
 const stopRun = (run: SetupRun) => {
 	run.stopped = true;
 
@@ -227,6 +242,8 @@ const report = (context: Bridge.Context, run: SetupRun, phase: FivemSetupPhase) 
 	if (run.stopped) {
 		return;
 	}
+
+	verified = phase === FivemSetupPhase.Ready;
 
 	context.setup.report(runtimeOf(phase));
 
@@ -336,7 +353,17 @@ export const checkLicence = async (context: Bridge.Context) => {
 };
 
 export const reportStopped = (context: Bridge.Context) => {
+	if (verified) {
+		reportOnce(context, FivemSetupPhase.Ready);
+
+		return;
+	}
+
 	reportOnce(context, licenseKeyOf(context) === null ? FivemSetupPhase.MissingKey : FivemSetupPhase.Stopped);
+};
+
+export const forgetVerdict = () => {
+	verified = false;
 };
 
 export const unknownSetupStep = () => {

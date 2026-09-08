@@ -9,6 +9,37 @@ const STDERR_TAIL = 200;
 
 const SQL_PATH = /^[\w][\w./-]{0,200}\.sql$/i;
 
+const SQL_ERROR = /^ERROR .*$/m;
+
+// The mariadb client's own `source` command prints a failing statement to stderr
+// and still exits 0, so a file with one broken statement in it would import as a
+// success and take the customer's framework schema down with it. Reading the file
+// from stdin is the form that fails the process. The paths ride in as positional
+// arguments, so nothing in them is ever read as shell.
+export const sqlClientCommand = (clientFile: string, sqlFile: string, database: string | null): string[] => {
+	return [
+		"sh",
+		"-c",
+		database === null ? 'exec mariadb --defaults-file="$1" < "$2"' : 'exec mariadb --defaults-file="$1" "$3" < "$2"',
+		"sh",
+		clientFile,
+		sqlFile,
+		...(database === null
+			? []
+			: [
+					database,
+				]),
+	];
+};
+
+// The client echoes the statement it choked on before the diagnosis, so the line
+// worth handing the customer is the one naming the error and its line number.
+export const sqlFailureReason = (stderr: string) => {
+	const matched = stderr.match(SQL_ERROR)?.at(0) ?? stderr.trim().split("\n").at(-1) ?? "";
+
+	return matched.trim().slice(0, STDERR_TAIL);
+};
+
 export const clientOptionFile = (password: string, socket: string, user: string) => {
 	return [
 		"[client]",
@@ -66,12 +97,7 @@ export const restoreDatabase = async (context: Bridge.Context) => {
 	}
 
 	const result = await context.exec(
-		[
-			"mariadb",
-			`--defaults-file=${absolute(DATABASE_CLIENT_FILE)}`,
-			"-e",
-			`source ${absolute(DATABASE_DUMP_FILE)}`,
-		],
+		sqlClientCommand(absolute(DATABASE_CLIENT_FILE), absolute(DATABASE_DUMP_FILE), null),
 		{
 			timeoutMs: DUMP_TIMEOUT_MS,
 		},
@@ -118,21 +144,12 @@ export const importSql = async (context: Bridge.Context, path: string) => {
 		});
 	}
 
-	const result = await context.exec(
-		[
-			"mariadb",
-			`--defaults-file=${absolute(DATABASE_CLIENT_FILE)}`,
-			DATABASE_NAME,
-			"-e",
-			`source ${absolute(path)}`,
-		],
-		{
-			timeoutMs: DUMP_TIMEOUT_MS,
-		},
-	);
+	const result = await context.exec(sqlClientCommand(absolute(DATABASE_CLIENT_FILE), absolute(path), DATABASE_NAME), {
+		timeoutMs: DUMP_TIMEOUT_MS,
+	});
 
 	if (result.code !== 0) {
-		const reason = result.stderr.trim().slice(0, STDERR_TAIL);
+		const reason = sqlFailureReason(result.stderr);
 
 		context.log.warn("the sql file failed against the database", {
 			path,

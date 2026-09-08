@@ -6,6 +6,7 @@ import {
 	BridgeIcon,
 	BridgeLayout,
 } from "@serverkgg/bridge";
+import { rconAccessSections } from "@serverkgg/bridge/rcon";
 import {
 	ANNOUNCE_MESSAGE_LENGTH,
 	ARTIFACT_VARIABLE,
@@ -482,6 +483,9 @@ const controlsTab: Bridge.Tab = {
 				},
 			],
 		},
+		...rconAccessSections({
+			portKey: "game",
+		}),
 	],
 };
 

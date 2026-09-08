@@ -12,6 +12,8 @@ describe("stampOf", () => {
 				playersToken: "players",
 				controlToken: "control",
 				panelPassword: "panel",
+				rconPassword: "rcon",
+				rconPasswordNext: "rcon-next",
 				profileSeeded: true,
 			}),
 		).toEqual({
@@ -21,6 +23,8 @@ describe("stampOf", () => {
 			playersToken: "players",
 			controlToken: "control",
 			panelPassword: "panel",
+			rconPassword: "rcon",
+			rconPasswordNext: "rcon-next",
 			profileSeeded: true,
 		});
 	});
@@ -44,6 +48,8 @@ describe("stampOf", () => {
 			playersToken: "players",
 			controlToken: "",
 			panelPassword: "",
+			rconPassword: "",
+			rconPasswordNext: "",
 			profileSeeded: false,
 		});
 	});
@@ -80,6 +86,8 @@ describe("stampOf", () => {
 			playersToken: "",
 			controlToken: "",
 			panelPassword: "",
+			rconPassword: "",
+			rconPasswordNext: "",
 			profileSeeded: false,
 		});
 	});

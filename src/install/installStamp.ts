@@ -8,6 +8,8 @@ export interface InstallStamp {
 	playersToken: string;
 	controlToken: string;
 	panelPassword: string;
+	rconPassword: string;
+	rconPasswordNext: string;
 	profileSeeded: boolean;
 }
 
@@ -33,6 +35,8 @@ export const stampOf = (raw: Record<string, unknown> | null): InstallStamp | nul
 		playersToken: textOr(raw.playersToken, ""),
 		controlToken: textOr(raw.controlToken, ""),
 		panelPassword: textOr(raw.panelPassword, ""),
+		rconPassword: textOr(raw.rconPassword, ""),
+		rconPasswordNext: textOr(raw.rconPasswordNext, ""),
 		profileSeeded: raw.profileSeeded === true,
 	};
 };

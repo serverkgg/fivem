@@ -1,5 +1,6 @@
 import { type Bridge, BridgeKind } from "@serverkgg/bridge";
 import { writeStamp } from "@serverkgg/bridge/install";
+import { rconExposed } from "@serverkgg/bridge/rcon";
 import { generateToken } from "@serverkgg/bridge/utils";
 import { startingRuntime } from "../setup";
 import {
@@ -9,6 +10,7 @@ import {
 	generatePanelPassword,
 	generatePlayersToken,
 	licenseKeyOf,
+	liveRconPassword,
 	ownedDirectives,
 	serverPaths,
 } from "../shared";
@@ -78,6 +80,7 @@ export const install: Bridge.Install = {
 		const playersToken = secretOf(stamp, "playersToken", generatePlayersToken);
 		const controlToken = secretOf(stamp, "controlToken", () => generateToken(CONTROL_TOKEN_LENGTH));
 		const panelPassword = secretOf(stamp, "panelPassword", generatePanelPassword);
+		const rconPassword = liveRconPassword(stamp?.rconPassword ?? "", stamp?.rconPasswordNext ?? "");
 
 		await writeDatabaseCredentials(context, databasePassword);
 
@@ -89,6 +92,7 @@ export const install: Bridge.Install = {
 				connectionString: connectionString(databasePassword),
 				playersToken,
 				controlToken,
+				rconPassword: rconExposed(context) ? rconPassword : "",
 			}),
 		);
 
@@ -106,6 +110,8 @@ export const install: Bridge.Install = {
 			playersToken,
 			controlToken,
 			panelPassword,
+			rconPassword,
+			rconPasswordNext: "",
 			profileSeeded,
 		});
 

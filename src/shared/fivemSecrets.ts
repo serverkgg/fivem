@@ -1,3 +1,4 @@
+import { RCON_PASSWORD_LENGTH } from "@serverkgg/bridge/rcon";
 import { generateToken } from "@serverkgg/bridge/utils";
 
 const DATABASE_PASSWORD_LENGTH = 28;
@@ -18,6 +19,18 @@ export const generatePlayersToken = () => {
 
 export const generatePanelPassword = () => {
 	return generateToken(PANEL_PASSWORD_LENGTH);
+};
+
+export const generateRconPassword = () => {
+	return generateToken(RCON_PASSWORD_LENGTH);
+};
+
+export const liveRconPassword = (current: string, next: string, generate: () => string = generateRconPassword) => {
+	if (next.length > 0) {
+		return next;
+	}
+
+	return current.length > 0 ? current : generate();
 };
 
 export const hashPassword = async (password: string) => {

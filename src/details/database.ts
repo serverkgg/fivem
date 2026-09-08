@@ -83,8 +83,10 @@ export const database: Bridge.Detail = {
 						en: "Password",
 					},
 					value: password,
-					format: BridgeDetailFormat.Text,
+					format: BridgeDetailFormat.Secret,
 				},
+				// The connection string carries the password inside it, so it is the
+				// same secret written another way and hides with it.
 				{
 					key: "connection",
 					label: {
@@ -92,7 +94,7 @@ export const database: Bridge.Detail = {
 						en: "Connection string (oxmysql)",
 					},
 					value: connectionString(password),
-					format: BridgeDetailFormat.Text,
+					format: BridgeDetailFormat.Secret,
 				},
 			],
 			links: [

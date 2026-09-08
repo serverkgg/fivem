@@ -5,14 +5,23 @@ const PORTAL_KEY = "cfxk_1a2b3c4d5e6f7g8h9i0j1_zz9xk2";
 
 const OLD_KEY = "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6";
 
-const licenseValue = (key: string | null) => {
+const directives = (licenseKey: string | null, rconPassword = "") => {
 	return ownedDirectives({
 		gamePort: 30_120,
-		licenseKey: key,
+		licenseKey,
 		connectionString: null,
 		playersToken: null,
 		controlToken: null,
-	}).find((directive) => directive.command === "sv_licenseKey")?.value;
+		rconPassword,
+	});
+};
+
+const licenseValue = (key: string | null) => {
+	return directives(key).find((directive) => directive.command === "sv_licenseKey")?.value;
+};
+
+const rconDirective = (rconPassword: string) => {
+	return directives(null, rconPassword).find((directive) => directive.command === "set rcon_password") ?? null;
 };
 
 describe("the one rule a licence key is judged by", () => {
@@ -36,5 +45,23 @@ describe("the one rule a licence key is judged by", () => {
 		expect(licenseValue(PORTAL_KEY)).toBe(PORTAL_KEY);
 		expect(licenseValue(` ${PORTAL_KEY} `)).toBeUndefined();
 		expect(licenseValue(null)).toBeUndefined();
+	});
+});
+
+describe("the rcon password the driver owns", () => {
+	test("writes the password the panel toggle opened remote access with", () => {
+		expect(rconDirective("secret")).toEqual({
+			command: "set rcon_password",
+			value: "secret",
+			quote: true,
+		});
+	});
+
+	test("writes the line empty while remote access is off, which is how fxserver keeps rcon closed", () => {
+		expect(rconDirective("")).toEqual({
+			command: "set rcon_password",
+			value: "",
+			quote: true,
+		});
 	});
 });

@@ -1,7 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import { BridgeControl, BridgeDetailFormat, BridgeLayout, BridgeSetupStepKind } from "@serverkgg/bridge";
 import { GuideOpenTab } from "@serverkgg/bridge/guides";
-import { txadminStats } from "./details";
+import { RCON_ACCESS_MODULE, RCON_ACCESS_VARIABLE } from "@serverkgg/bridge/rcon";
+import { rconPasswordOf, txadminStats } from "./details";
 import { driver } from "./driver";
 import { LICENSE_KEY_PATTERN, LICENSE_VARIABLE } from "./shared";
 
@@ -126,6 +127,51 @@ describe("keeping the customer's own secrets out of everyone else's hands", () =
 
 		expect(stats.find((stat) => stat.key === "password")?.format).toBe(BridgeDetailFormat.Secret);
 	});
+
+	test("shows no rcon password before the first boot generated one", () => {
+		expect(rconPasswordOf(null)).toBeNull();
+		expect(
+			rconPasswordOf({
+				build: "12913",
+				reference: "12913-abcdef",
+				databasePassword: "",
+				playersToken: "",
+				controlToken: "",
+				panelPassword: "",
+				rconPassword: "",
+				rconPasswordNext: "",
+				profileSeeded: false,
+			}),
+		).toBeNull();
+	});
+
+	test("shows the rotated rcon password as pending until the restart writes it", () => {
+		const stamp = {
+			build: "12913",
+			reference: "12913-abcdef",
+			databasePassword: "",
+			playersToken: "",
+			controlToken: "",
+			panelPassword: "",
+			rconPassword: "live",
+			rconPasswordNext: "",
+			profileSeeded: false,
+		};
+
+		expect(rconPasswordOf(stamp)).toEqual({
+			value: "live",
+			pending: false,
+		});
+		expect(
+			rconPasswordOf({
+				...stamp,
+				rconPasswordNext: "next",
+			}),
+		).toEqual({
+			value: "next",
+			pending: true,
+		});
+	});
 });
 
 describe("assembling the fivem driver", () => {
@@ -143,5 +189,10 @@ describe("assembling the fivem driver", () => {
 				expect(Object.keys(modules)).toContain(section.module);
 			}
 		}
+	});
+
+	test("declares the remote access toggle beside its card, on the game port rather than a new one", () => {
+		expect(formSection("controls", "rcon-access")?.fields.map((field) => field.key)).toContain(RCON_ACCESS_VARIABLE);
+		expect(Object.keys(modules)).toContain(RCON_ACCESS_MODULE);
 	});
 });

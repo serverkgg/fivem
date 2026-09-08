@@ -43,13 +43,16 @@ export const seedTxAdminProfile = async (
 	// (ConfigStore 10). Only txData is ours to create ahead of time.
 	await context.files.ensure(TXADMIN_DATA_DIRECTORY);
 
-	const configured = (await context.files.exists(TXADMIN_CONFIG_FILE))
-		? serverPathsOf(await context.files.read(TXADMIN_CONFIG_FILE)) !== null
-		: false;
+	const present = await context.files.exists(TXADMIN_CONFIG_FILE);
+	const configured = present ? serverPathsOf(await context.files.read(TXADMIN_CONFIG_FILE)) !== null : false;
 
 	// Once serverk has written the profile the owner owns it, including the
-	// cleared data path the "open the setup page" action leaves behind.
-	if (configured || seeded) {
+	// cleared data path the "open the setup page" action leaves behind. That
+	// memory lives in .serverk-install.json, which reset.keep spares while the
+	// profile itself is wiped, so it only stands while the profile it describes
+	// is still on disk — otherwise a Reset would leave txAdmin with no config to
+	// start the game from and no install willing to write one.
+	if (configured || (seeded && present)) {
 		return seeded;
 	}
 
