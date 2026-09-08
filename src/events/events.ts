@@ -50,7 +50,9 @@ export const events: Bridge.Events = {
 	],
 	emits: [
 		"PlayerJoined",
+		"PlayerKicked",
 		"PlayerLeft",
 		"ServerStopping",
+		"ServerUpdated",
 	],
 };

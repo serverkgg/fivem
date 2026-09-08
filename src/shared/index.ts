@@ -5,6 +5,7 @@ export * from "./fivemDatabase";
 export * from "./fivemDump";
 export * from "./fivemPaths";
 export * from "./fivemPlayers";
+export * from "./fivemRoster";
 export * from "./fivemSecrets";
 export * from "./fivemServerPaths";
 export * from "./fivemSettings";

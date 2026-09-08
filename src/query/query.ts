@@ -1,69 +1,30 @@
 import { type Bridge, BridgeKind } from "@serverkgg/bridge";
-import { readStamp } from "../install";
-import { type FivemRosterEntry, playerRoster, serverDynamic } from "../shared";
+import { installStamp } from "../install";
+import { playerRoster, roster, serverDynamic } from "../shared";
 
 const REFRESH_SECONDS = 15;
 
-const online = new Map<string, FivemRosterEntry>();
+const readRoster = async (context: Bridge.Context) => {
+	try {
+		const stamp = await installStamp(context);
 
-const presenceOf = (player: FivemRosterEntry) => {
-	return {
-		player: player.name,
-		id: player.id,
-		...(player.ping === null
-			? {}
-			: {
-					ping: String(player.ping),
-				}),
-		...(player.identifier === null
-			? {}
-			: {
-					identifier: player.identifier,
-				}),
-	};
+		return await playerRoster(context, stamp?.playersToken ?? null);
+	} catch {
+		return null;
+	}
 };
 
 // A roster the server anonymised carries no usable identity, so it is read as a
 // count and nothing else. Emitting from it would report one player joining and
 // leaving over and over, because every entry shares id 0.
 const syncSessions = async (context: Bridge.Context) => {
-	let current: Map<string, FivemRosterEntry>;
+	const current = await readRoster(context);
 
-	try {
-		const stamp = await readStamp(context);
-		const roster = await playerRoster(context, stamp?.playersToken ?? null);
-
-		if (roster.anonymous) {
-			return;
-		}
-
-		current = new Map(
-			roster.entries.map((player) => [
-				player.id,
-				player,
-			]),
-		);
-	} catch {
+	if (current === null || current.anonymous) {
 		return;
 	}
 
-	for (const [id, player] of current) {
-		if (!online.has(id)) {
-			context.emit("PlayerJoined", presenceOf(player));
-		}
-	}
-
-	for (const [id, player] of online) {
-		if (!current.has(id)) {
-			context.emit("PlayerLeft", presenceOf(player));
-		}
-	}
-
-	online.clear();
-
-	for (const [id, player] of current) {
-		online.set(id, player);
-	}
+	roster.sync(context, current.entries);
 };
 
 export const query: Bridge.Query = {

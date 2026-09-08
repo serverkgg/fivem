@@ -1,8 +1,11 @@
 import { type Bridge, BridgeUserError } from "@serverkgg/bridge";
+import { execDetail } from "@serverkgg/bridge/utils";
 import { DATABASE_NAME } from "./fivemDatabase";
 import { absolutePath as absolute, DATABASE_CLIENT_FILE, DATABASE_DUMP_FILE } from "./fivemPaths";
 
 const DUMP_TIMEOUT_MS = 300_000;
+
+const STDERR_TAIL = 200;
 
 const SQL_PATH = /^[\w][\w./-]{0,200}\.sql$/i;
 
@@ -43,7 +46,7 @@ export const dumpDatabase = async (context: Bridge.Context) => {
 	if (result.code !== 0) {
 		context.log.warn("the database dump failed, the backup carries the previous one", {
 			code: result.code,
-			detail: result.stderr.slice(0, 300),
+			detail: execDetail(result),
 		});
 
 		return;
@@ -129,9 +132,17 @@ export const importSql = async (context: Bridge.Context, path: string) => {
 	);
 
 	if (result.code !== 0) {
+		const reason = result.stderr.trim().slice(0, STDERR_TAIL);
+
+		context.log.warn("the sql file failed against the database", {
+			path,
+			code: result.code,
+			detail: execDetail(result),
+		});
+
 		throw new BridgeUserError({
-			ar: `ما قدرنا ننفّذ الملف على قاعدة البيانات: ${result.stderr.slice(0, 200)}`,
-			en: `we could not run that file against the database: ${result.stderr.slice(0, 200)}`,
+			ar: `ما قدرنا ننفّذ الملف على قاعدة البيانات: ${reason}`,
+			en: `we could not run that file against the database: ${reason}`,
 		});
 	}
 

@@ -1,4 +1,5 @@
 import type { Bridge } from "@serverkgg/bridge";
+import { LoopbackMethod, loopbackJson } from "@serverkgg/bridge/net";
 import { rosterOf } from "./fivemPlayers";
 
 const HOST = "127.0.0.1";
@@ -19,31 +20,15 @@ export interface FivemDynamic {
 	mapname?: unknown;
 }
 
-export class FivemApiError extends Error {
-	readonly status: number | null;
-
-	constructor(status: number | null, message: string) {
-		super(message);
-
-		this.name = "FivemApiError";
-		this.status = status;
-	}
-}
-
-const request = async (context: Bridge.Context, path: string, headers: Record<string, string> = {}) => {
-	const response = await fetch(`http://${HOST}:${context.port("game")}${path}`, {
+const request = async <Result>(context: Bridge.Context, path: string, headers: Record<string, string> = {}) => {
+	return await loopbackJson<Result>(`http://${HOST}:${context.port("game")}${path}`, {
+		method: LoopbackMethod.Get,
 		headers: {
 			accept: "application/json",
 			...headers,
 		},
-		signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+		timeoutMs: REQUEST_TIMEOUT_MS,
 	});
-
-	if (!response.ok) {
-		throw new FivemApiError(response.status, `fxserver answered ${response.status} for ${path}`);
-	}
-
-	return (await response.json()) as unknown;
 };
 
 // citizenfx/fivem commit d52296e (2026-07-08) anonymises /players.json: without
@@ -57,7 +42,7 @@ export const playerRoster = async (context: Bridge.Context, playersToken: string
 		headers[PLAYERS_TOKEN_HEADER] = playersToken;
 	}
 
-	return rosterOf(await request(context, PLAYERS_PATH, headers));
+	return rosterOf(await request<unknown>(context, PLAYERS_PATH, headers));
 };
 
 const countOf = (value: unknown): number | null => {
@@ -70,7 +55,7 @@ const countOf = (value: unknown): number | null => {
 // is everything the sample needs; the roster is the only reason to ask
 // /players.json for more.
 export const serverDynamic = async (context: Bridge.Context) => {
-	const payload = (await request(context, DYNAMIC_PATH)) as FivemDynamic;
+	const payload = await request<FivemDynamic>(context, DYNAMIC_PATH);
 
 	return {
 		online: countOf(payload.clients),

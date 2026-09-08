@@ -1,5 +1,5 @@
 import { type Bridge, BridgeDetailFormat, BridgeDetailTone, BridgeKind } from "@serverkgg/bridge";
-import { readStamp } from "../install";
+import { installStamp } from "../install";
 import {
 	connectionString,
 	DATABASE_HOST,
@@ -17,7 +17,7 @@ export const database: Bridge.Detail = {
 	kind: BridgeKind.Detail,
 	refreshSeconds: REFRESH_SECONDS,
 	async read(context) {
-		const stamp = await readStamp(context);
+		const stamp = await installStamp(context);
 		const password = stamp?.databasePassword ?? "";
 
 		if (password.length === 0) {

@@ -1,6 +1,5 @@
 import type { Bridge } from "@serverkgg/bridge";
-
-export const STAMP_FILE = ".serverk-install.json";
+import { readStamp } from "@serverkgg/bridge/install";
 
 export interface InstallStamp {
 	build: string;
@@ -22,36 +21,22 @@ const textOr = (value: unknown, fallback: string) => {
 	return isText(value) ? value : fallback;
 };
 
-export const parseStamp = (raw: string): InstallStamp | null => {
-	try {
-		const parsed = JSON.parse(raw) as Partial<InstallStamp>;
-
-		if (!isText(parsed.build) || !isText(parsed.reference)) {
-			return null;
-		}
-
-		return {
-			build: parsed.build,
-			reference: parsed.reference,
-			databasePassword: textOr(parsed.databasePassword, ""),
-			playersToken: textOr(parsed.playersToken, ""),
-			controlToken: textOr(parsed.controlToken, ""),
-			panelPassword: textOr(parsed.panelPassword, ""),
-			profileSeeded: parsed.profileSeeded === true,
-		};
-	} catch {
-		return null;
-	}
-};
-
-export const readStamp = async (context: Bridge.Context): Promise<InstallStamp | null> => {
-	if (!(await context.files.exists(STAMP_FILE))) {
+export const stampOf = (raw: Record<string, unknown> | null): InstallStamp | null => {
+	if (raw === null || !isText(raw.build) || !isText(raw.reference)) {
 		return null;
 	}
 
-	return parseStamp(await context.files.read(STAMP_FILE));
+	return {
+		build: raw.build,
+		reference: raw.reference,
+		databasePassword: textOr(raw.databasePassword, ""),
+		playersToken: textOr(raw.playersToken, ""),
+		controlToken: textOr(raw.controlToken, ""),
+		panelPassword: textOr(raw.panelPassword, ""),
+		profileSeeded: raw.profileSeeded === true,
+	};
 };
 
-export const writeStamp = async (context: Bridge.Context, stamp: InstallStamp) => {
-	await context.files.write(STAMP_FILE, `${JSON.stringify(stamp, null, 2)}\n`);
+export const installStamp = async (context: Bridge.Context): Promise<InstallStamp | null> => {
+	return stampOf(await readStamp(context));
 };

@@ -26,6 +26,12 @@ resources:
 
 container:
   image: serverkgg/fivem
+  runtime:
+    platform: linux
+    installBudgetMinutes: 15
+    bootBudgetMinutes: 12
+    shmMb: 64
+    pidsLimit: 512
   ports:
     - key: game
       containerPort: 30120

@@ -1,4 +1,5 @@
 import type { Bridge } from "@serverkgg/bridge";
+import { execDetail } from "@serverkgg/bridge/utils";
 import {
 	clientOptionFile,
 	DATABASE_CLIENT_FILE,
@@ -38,7 +39,7 @@ export const installDatabase = async (context: Bridge.Context) => {
 	]);
 
 	if (result.code !== 0 || !(await isDatabaseInstalled(context))) {
-		throw new Error(`mariadb-install-db failed with code ${result.code}: ${result.stderr.slice(0, 400)}`);
+		throw new Error(`mariadb-install-db failed with code ${result.code} — ${execDetail(result)}`);
 	}
 
 	context.log("mariadb data directory ready");

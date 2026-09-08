@@ -1,5 +1,5 @@
 import { type Bridge, BridgeKind, BridgeUserError } from "@serverkgg/bridge";
-import { readStamp } from "../install";
+import { installStamp } from "../install";
 import { playerRoster } from "../shared";
 
 const REFRESH_SECONDS = 15;
@@ -11,7 +11,7 @@ export const players: Bridge.Collection = {
 	requiresRunning: true,
 	refreshSeconds: REFRESH_SECONDS,
 	async list(context) {
-		const stamp = await readStamp(context);
+		const stamp = await installStamp(context);
 		const roster = await playerRoster(context, stamp?.playersToken ?? null);
 
 		// Without a matching sv_playersToken FXServer answers one anonymous entry
@@ -28,6 +28,11 @@ export const players: Bridge.Collection = {
 	actions: {
 		async kick(context, row) {
 			await context.command(`serverk_kick ${row.id} ${KICK_REASON}`);
+
+			context.emit("PlayerKicked", {
+				player: typeof row.name === "string" && row.name.length > 0 ? row.name : row.id,
+				id: row.id,
+			});
 		},
 	},
 };

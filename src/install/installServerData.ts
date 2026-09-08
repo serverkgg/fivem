@@ -1,4 +1,5 @@
 import type { Bridge } from "@serverkgg/bridge";
+import { execDetail } from "@serverkgg/bridge/utils";
 import {
 	DEFAULT_PATHS,
 	type FivemServerPaths,
@@ -31,7 +32,7 @@ export const seedServerData = async (context: Bridge.Context) => {
 	await context.files.remove(SERVER_DATA_ARCHIVE);
 
 	if (result.code !== 0) {
-		throw new Error(`unpacking cfx-server-data failed with code ${result.code}: ${result.stderr.slice(0, 400)}`);
+		throw new Error(`unpacking cfx-server-data failed with code ${result.code} — ${execDetail(result)}`);
 	}
 
 	if (!(await context.files.exists(DEFAULT_PATHS.resources))) {

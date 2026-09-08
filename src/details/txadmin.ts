@@ -1,5 +1,5 @@
 import { type Bridge, BridgeDetailFormat, BridgeDetailTone, BridgeKind, BridgeUserError } from "@serverkgg/bridge";
-import { readStamp } from "../install";
+import { installStamp } from "../install";
 import {
 	clearedConfigFile,
 	licenseKeyOf,
@@ -58,7 +58,7 @@ export const txadmin: Bridge.Detail = {
 	kind: BridgeKind.Detail,
 	refreshSeconds: REFRESH_SECONDS,
 	async read(context) {
-		const stamp = await readStamp(context);
+		const stamp = await installStamp(context);
 		const password = stamp?.panelPassword ?? "";
 
 		if (password.length === 0) {

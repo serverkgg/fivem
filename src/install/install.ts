@@ -1,4 +1,6 @@
 import { type Bridge, BridgeKind } from "@serverkgg/bridge";
+import { writeStamp } from "@serverkgg/bridge/install";
+import { generateToken } from "@serverkgg/bridge/utils";
 import { startingRuntime } from "../setup";
 import {
 	applyDirectives,
@@ -6,7 +8,6 @@ import {
 	generateDatabasePassword,
 	generatePanelPassword,
 	generatePlayersToken,
-	generateToken,
 	licenseKeyOf,
 	ownedDirectives,
 	serverPaths,
@@ -15,7 +16,7 @@ import { installArtifact, isArtifactInstalled, resolveRequestedArtifact } from "
 import { installDatabase, writeDatabaseCredentials } from "./installDatabase";
 import { seedChatResource, seedPanelResource } from "./installResource";
 import { seedServerConfig, seedServerData } from "./installServerData";
-import { type InstallSecret, type InstallStamp, readStamp, writeStamp } from "./installStamp";
+import { type InstallSecret, type InstallStamp, installStamp } from "./installStamp";
 import { seedTxAdminProfile, writeTxAdminEnvironment } from "./installTxAdmin";
 
 const CONTROL_TOKEN_LENGTH = 40;
@@ -29,19 +30,28 @@ const secretOf = (stamp: InstallStamp | null, key: InstallSecret, fallback: () =
 export const install: Bridge.Install = {
 	kind: BridgeKind.Install,
 	async run(context) {
-		const stamp = await readStamp(context);
+		const stamp = await installStamp(context);
 		const artifact = await resolveRequestedArtifact(context);
 		const installed = await isArtifactInstalled(context);
 
 		if (!installed || stamp?.reference !== artifact.reference) {
-			if (installed && stamp !== null) {
+			const previousBuild = installed && stamp !== null ? stamp.build : null;
+
+			if (previousBuild !== null) {
 				context.log("moving to another fivem build", {
-					from: stamp.build,
+					from: previousBuild,
 					to: artifact.build,
 				});
 			}
 
 			await installArtifact(context, artifact);
+
+			if (previousBuild !== null) {
+				context.emit("ServerUpdated", {
+					from: previousBuild,
+					to: artifact.build,
+				});
+			}
 		}
 
 		const licenseKey = licenseKeyOf(context);
@@ -89,7 +99,7 @@ export const install: Bridge.Install = {
 			panelPassword,
 		});
 
-		await writeStamp(context, {
+		await writeStamp<InstallStamp>(context, {
 			build: artifact.build,
 			reference: artifact.reference,
 			databasePassword,
@@ -114,7 +124,7 @@ export const install: Bridge.Install = {
 		context.setup.report(startingRuntime(licenseKey !== null));
 	},
 	async describe(context) {
-		const stamp = await readStamp(context);
+		const stamp = await installStamp(context);
 
 		return {
 			version: stamp?.build ?? null,

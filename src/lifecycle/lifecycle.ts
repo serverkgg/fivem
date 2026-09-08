@@ -1,7 +1,7 @@
 import { type Bridge, BridgeKind } from "@serverkgg/bridge";
 import { PANEL_READY, SERVER_READY } from "../events";
 import { checkLicence, reportStopped } from "../setup";
-import { RUN_PID_FILE, START_SCRIPT } from "../shared";
+import { RUN_PID_FILE, roster, START_SCRIPT } from "../shared";
 
 const STOP_TIMEOUT_SECONDS = 90;
 
@@ -48,6 +48,8 @@ export const lifecycle: Bridge.Lifecycle = {
 	async stop(context) {
 		context.emit("ServerStopping");
 
+		roster.clear();
+
 		if (!(await terminate(context))) {
 			context.log.warn("no start script pid to signal, falling back to the supervisor");
 		}
@@ -55,6 +57,8 @@ export const lifecycle: Bridge.Lifecycle = {
 		reportStopped(context);
 	},
 	async onReady(context) {
+		roster.clear();
+
 		await checkLicence(context);
 	},
 };

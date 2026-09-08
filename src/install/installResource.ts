@@ -1,4 +1,5 @@
 import type { Bridge } from "@serverkgg/bridge";
+import { execDetail } from "@serverkgg/bridge/utils";
 import { CONTROL_TOKEN_CONVAR, type FivemServerPaths, PANEL_RESOURCE, RUNTIME_DIRECTORY } from "../shared";
 
 const MANIFEST = `fx_version 'cerulean'
@@ -135,7 +136,7 @@ export const seedChatResource = async (context: Bridge.Context, paths: FivemServ
 	]);
 
 	if (result.code !== 0) {
-		throw new Error(`seeding the chat resource failed with code ${result.code}: ${result.stderr.slice(0, 400)}`);
+		throw new Error(`seeding the chat resource failed with code ${result.code} — ${execDetail(result)}`);
 	}
 
 	context.log("chat resource seeded from the artifact");

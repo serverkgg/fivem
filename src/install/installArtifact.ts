@@ -1,4 +1,5 @@
 import type { Bridge } from "@serverkgg/bridge";
+import { execDetail } from "@serverkgg/bridge/utils";
 import {
 	ARTIFACT_ARCHIVE,
 	ARTIFACT_VARIABLE,
@@ -79,7 +80,7 @@ export const installArtifact = async (context: Bridge.Context, artifact: FivemAr
 	await context.files.remove(ARTIFACT_ARCHIVE);
 
 	if (result.code !== 0) {
-		throw new Error(`unpacking the fivem artifact failed with code ${result.code}: ${result.stderr.slice(0, 400)}`);
+		throw new Error(`unpacking the fivem artifact failed with code ${result.code} — ${execDetail(result)}`);
 	}
 
 	if (!(await isArtifactInstalled(context))) {
