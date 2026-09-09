@@ -2,19 +2,15 @@ import type { Bridge } from "@serverkgg/bridge";
 import { createRosterSync } from "@serverkgg/bridge/presence";
 import type { FivemRosterEntry } from "./fivemPlayers";
 
-const presenceOf = (player: FivemRosterEntry): Bridge.Values => {
+export const presenceOf = (player: FivemRosterEntry): Bridge.Values => {
 	return {
 		player: player.name,
-		id: player.id,
+		identifier: player.id,
+		slot: String(player.slot),
 		...(player.ping === null
 			? {}
 			: {
 					ping: String(player.ping),
-				}),
-		...(player.identifier === null
-			? {}
-			: {
-					identifier: player.identifier,
 				}),
 	};
 };

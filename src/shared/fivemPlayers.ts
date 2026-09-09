@@ -20,8 +20,8 @@ export interface FivemPlayerPayload {
 
 export type FivemRosterEntry = Bridge.Row & {
 	name: string;
+	slot: number;
 	ping: number | null;
-	identifier: string | null;
 };
 
 export interface FivemRoster {
@@ -56,9 +56,18 @@ const numberOrNull = (value: unknown): number | null => {
 	return typeof value === "number" || typeof value === "string" ? (Number.isFinite(parsed) ? parsed : null) : null;
 };
 
+// A session id is reassigned the moment a player leaves, so it identifies a
+// connection and never a person. The identifier does, which is why it is the
+// row id and the slot is only what a command addresses.
+const SLOT_IDENTIFIER_PREFIX = "slot:";
+
+const rosterIdOf = (identifiers: string[], slot: number): string => {
+	return preferredIdentifier(identifiers) ?? `${SLOT_IDENTIFIER_PREFIX}${slot}`;
+};
+
 // An anonymised payload carries one { id: 0, name: "Player" } per connected
-// player, so every entry collapses onto the same key. Counting them is the only
-// safe reading: a roster keyed on id 0 would report one player and turn every
+// player, so every entry collapses onto the same slot. Counting them is the only
+// safe reading: a roster keyed on slot 0 would report one player and turn every
 // join and leave into noise.
 export const rosterOf = (payload: unknown): FivemRoster => {
 	if (!Array.isArray(payload)) {
@@ -74,26 +83,26 @@ export const rosterOf = (payload: unknown): FivemRoster => {
 			return [];
 		}
 
-		const id = numberOrNull(entry.id);
+		const slot = numberOrNull(entry.id);
 
-		if (id === null) {
+		if (slot === null) {
 			return [];
 		}
 
 		const identifiers = identifiersOf(entry.identifiers);
-		const name = typeof entry.name === "string" && entry.name.length > 0 ? entry.name : `#${id}`;
+		const name = typeof entry.name === "string" && entry.name.length > 0 ? entry.name : `#${slot}`;
 
 		return [
 			{
-				id: String(id),
+				id: rosterIdOf(identifiers, slot),
 				name,
+				slot,
 				ping: numberOrNull(entry.ping),
-				identifier: preferredIdentifier(identifiers),
 			},
 		];
 	});
 
-	const anonymous = entries.length > 0 && entries.every((entry) => entry.id === "0");
+	const anonymous = entries.length > 0 && entries.every((entry) => entry.slot === 0);
 
 	return {
 		entries: anonymous ? [] : entries,

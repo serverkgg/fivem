@@ -8,7 +8,7 @@ const player: Bridge.TerminalArg = {
 	},
 	required: true,
 	module: "players",
-	column: "id",
+	column: "slot",
 };
 
 const commands: Bridge.TerminalCommand[] = [
@@ -70,8 +70,8 @@ const commands: Bridge.TerminalCommand[] = [
 	{
 		name: "serverk_kick",
 		summary: {
-			ar: "يطرد لاعب برقمه، مع سبب اختياري.",
-			en: "Kick a player by id, with an optional reason.",
+			ar: "يطرد لاعب برقم خانته، مع سبب اختياري.",
+			en: "Kick a player by their session slot, with an optional reason.",
 		},
 		syntax: "serverk_kick <player> [reason]",
 		args: [

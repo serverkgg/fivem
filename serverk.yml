@@ -96,16 +96,16 @@ reset:
 
 presence:
   name: player
-  id: id
+  id: identifier
   fields:
     - key: ping
       label:
         ar: البنق
         en: Ping
-    - key: identifier
+    - key: slot
       label:
-        ar: المعرّف
-        en: Identifier
+        ar: الخانة
+        en: Slot
 
 files:
   protected:

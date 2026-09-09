@@ -5,6 +5,7 @@ import {
 	BridgeFormTarget,
 	BridgeIcon,
 	BridgeLayout,
+	BridgePlace,
 } from "@serverkgg/bridge";
 import { rconAccessSections } from "@serverkgg/bridge/rcon";
 import {
@@ -29,6 +30,10 @@ const licenseTab: Bridge.Tab = {
 			title: {
 				ar: "مفتاح الترخيص والبيلد",
 				en: "Licence key and build",
+			},
+			help: {
+				ar: "مفتاحك من Cfx.re ونسخة السيرفر اللي نركّبها. أي تغيير هنا يعيد تجهيز السيرفر.",
+				en: "Your Cfx.re key and the build we install. Changing either reinstalls the server.",
 			},
 			target: BridgeFormTarget.Variables,
 			reinstall: true,
@@ -115,6 +120,10 @@ const settingsTab: Bridge.Tab = {
 		{
 			layout: BridgeLayout.Form,
 			id: "server",
+			help: {
+				ar: "إعدادات سيرفرك الأساسية، نكتبها في server.cfg وتبي إعادة تشغيل عشان تشتغل.",
+				en: "Your server's core settings — we write them into server.cfg and they need a restart.",
+			},
 			target: BridgeFormTarget.Settings,
 			module: "settings",
 			restartHint: true,
@@ -273,6 +282,11 @@ const playersTab: Bridge.Tab = {
 		{
 			layout: BridgeLayout.Table,
 			id: "online",
+			help: {
+				ar: "اللي داخلين سيرفرك الحين. الطرد من هنا، والحظر من لوحة txAdmin لأن فايف إم نفسه ما فيه حظر.",
+				en: "Everyone on your server right now. Kick from here; banning lives in txAdmin, because FiveM itself has none.",
+			},
+			place: BridgePlace.Players,
 			module: "players",
 			columns: [
 				{
@@ -283,10 +297,10 @@ const playersTab: Bridge.Tab = {
 					},
 				},
 				{
-					key: "id",
+					key: "slot",
 					label: {
-						ar: "الرقم",
-						en: "ID",
+						ar: "الخانة",
+						en: "Slot",
 					},
 				},
 				{
@@ -294,13 +308,6 @@ const playersTab: Bridge.Tab = {
 					label: {
 						ar: "البنق",
 						en: "Ping",
-					},
-				},
-				{
-					key: "identifier",
-					label: {
-						ar: "المعرّف",
-						en: "Identifier",
 					},
 				},
 			],

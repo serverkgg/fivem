@@ -8,6 +8,7 @@ const PAYLOAD = [
 		identifiers: [
 			"ip:127.0.0.1",
 			"license:1234567890abcdef1234567890abcdef12345678",
+			"steam:110000100000001",
 			"discord:100000000000000000",
 		],
 		name: "Mohammed",
@@ -17,10 +18,17 @@ const PAYLOAD = [
 		endpoint: "10.0.0.2:30120",
 		id: 2,
 		identifiers: [
-			"steam:110000100000001",
+			"ip:10.0.0.2",
 		],
 		name: "خالد",
 		ping: 0,
+	},
+	{
+		endpoint: "10.0.0.3:30120",
+		id: 3,
+		identifiers: [],
+		name: "Sara",
+		ping: 88,
 	},
 ];
 
@@ -58,28 +66,59 @@ describe("preferredIdentifier", () => {
 });
 
 describe("rosterOf", () => {
-	test("maps players.json into rows", () => {
+	test("maps players.json into rows keyed on the stable identifier", () => {
 		expect(rosterOf(PAYLOAD)).toEqual({
-			count: 2,
+			count: 3,
 			anonymous: false,
 			entries: [
 				{
-					id: "1",
+					id: "license:1234567890abcdef1234567890abcdef12345678",
 					name: "Mohammed",
+					slot: 1,
 					ping: 34,
-					identifier: "license:1234567890abcdef1234567890abcdef12345678",
 				},
 				{
-					id: "2",
+					id: "ip:10.0.0.2",
 					name: "خالد",
+					slot: 2,
 					ping: 0,
-					identifier: "steam:110000100000001",
+				},
+				{
+					id: "slot:3",
+					name: "Sara",
+					slot: 3,
+					ping: 88,
 				},
 			],
 		});
 	});
 
-	test("keeps a player with no name under their id", () => {
+	test("keeps the session id apart from the identity, so a reused slot is a new player", () => {
+		const first = rosterOf([
+			{
+				id: 4,
+				identifiers: [
+					"license:aaaa",
+				],
+				name: "Mohammed",
+			},
+		]);
+
+		const second = rosterOf([
+			{
+				id: 4,
+				identifiers: [
+					"license:bbbb",
+				],
+				name: "خالد",
+			},
+		]);
+
+		expect(first.entries.at(0)?.slot).toBe(second.entries.at(0)?.slot);
+		expect(first.entries.at(0)?.id).not.toBe(second.entries.at(0)?.id);
+	});
+
+	test("keeps a player with no name under their slot", () => {
 		expect(
 			rosterOf([
 				{
@@ -88,10 +127,10 @@ describe("rosterOf", () => {
 				},
 			]).entries.at(0),
 		).toEqual({
-			id: "7",
+			id: "slot:7",
 			name: "#7",
+			slot: 7,
 			ping: null,
-			identifier: null,
 		});
 	});
 
@@ -113,8 +152,13 @@ describe("rosterOf", () => {
 					name: "Sara",
 					ping: "12",
 				},
-			]).entries.at(0)?.ping,
-		).toBe(12);
+			]).entries.at(0),
+		).toEqual({
+			id: "slot:3",
+			name: "Sara",
+			slot: 3,
+			ping: 12,
+		});
 	});
 
 	test("reads an anonymised roster as a count and no rows", () => {
